@@ -1,6 +1,14 @@
 import { useAppStore } from '#/store/appStore'
 import { mockDevices, generateMockSummary, mockHistory } from '#/lib/mockData'
-import { Activity, Cpu, Plus, Settings, Wheat, Wifi } from 'lucide-react'
+import {
+  Activity,
+  Cpu,
+  PanelLeftIcon,
+  Plus,
+  Settings,
+  Wheat,
+  Wifi,
+} from 'lucide-react'
 import { AppSidebar } from '#/components/app-sidebar'
 import {
   Breadcrumb,
@@ -16,6 +24,7 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from '#/components/ui/sidebar'
 
 export function DashboardPage() {
@@ -26,9 +35,8 @@ export function DashboardPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background px-4 md:px-6">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="h-5" />
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-3 bg-background px-4 md:px-6">
+          <DashboardSidebarTrigger />
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -145,6 +153,30 @@ export function DashboardPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+function DashboardSidebarTrigger() {
+  const { state, toggleSidebar } = useSidebar()
+
+  if (state !== 'collapsed') {
+    return <SidebarTrigger />
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggleSidebar}
+      aria-label="Open sidebar"
+      className="group relative flex size-8 items-center justify-center rounded-md transition hover:bg-muted"
+    >
+      <img
+        src="/logo-icon.svg"
+        alt="hum.ai"
+        className="size-6 object-contain transition-opacity group-hover:opacity-20"
+      />
+      <PanelLeftIcon className="absolute size-4 opacity-0 transition-opacity group-hover:opacity-100" />
+    </button>
   )
 }
 

@@ -16,7 +16,6 @@ import {
 import {
   BotIcon,
   BookOpenIcon,
-  Command,
   FrameIcon,
   LifeBuoyIcon,
   MapIcon,
@@ -143,13 +142,17 @@ const data = {
 }
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="floating" collapsible="icon" {...props}>
+    <Sidebar variant="floating" collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<a href="#" />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Command className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
+                <img
+                  src="/logo-icon.svg"
+                  alt="hum.ai"
+                  className="size-7 rounded-sm object-contain"
+                />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">hum.ai</span>

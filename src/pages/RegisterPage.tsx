@@ -56,7 +56,7 @@ export function RegisterPage() {
       <Button
         variant={'ghost'}
         className="flex absolute top-4 left-4 h-10 w-10"
-        onClick={() => window.history.back()}
+        onClick={() => navigate({ to: '/' })}
       >
         <ArrowLeft />
       </Button>
