@@ -6,6 +6,14 @@ interface User {
   name: string
   email: string
   role: 'admin' | 'user' | 'viewer'
+  deviceId?: string
+}
+
+interface Device {
+  id: string
+  name: string
+  group?: string
+  lastSeen?: string
 }
 
 interface AppState {
@@ -15,13 +23,15 @@ interface AppState {
   setUser: (user: User | null) => void
   logout: () => void
 
+  // Device state
+  devices: Device[]
+  setDevices: (devices: Device[]) => void
+  addDevice: (device: Device) => void
+  removeDevice: (deviceId: string) => void
+
   // UI state
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
-
-  // Theme state
-  theme: 'light' | 'dark'
-  setTheme: (theme: 'light' | 'dark') => void
 }
 
 /**
@@ -39,10 +49,10 @@ export const useAppStore = create<AppState>()(
         // Initial state
         user: null,
         isAuthenticated: false,
+        devices: [],
         sidebarOpen: true,
-        theme: 'light',
 
-        // Actions
+        // User actions
         setUser: (user) =>
           set({
             user,
@@ -53,16 +63,28 @@ export const useAppStore = create<AppState>()(
           set({
             user: null,
             isAuthenticated: false,
+            devices: [],
           }),
 
-        setSidebarOpen: (open) => set({ sidebarOpen: open }),
+        // Device actions
+        setDevices: (devices) => set({ devices }),
 
-        setTheme: (theme) => set({ theme }),
+        addDevice: (device) =>
+          set((state) => ({
+            devices: [...state.devices, device],
+          })),
+
+        removeDevice: (deviceId) =>
+          set((state) => ({
+            devices: state.devices.filter((d) => d.id !== deviceId),
+          })),
+
+        // UI actions
+        setSidebarOpen: (open) => set({ sidebarOpen: open }),
       }),
       {
         name: 'app-store', // localStorage key
         partialize: (state) => ({
-          theme: state.theme,
           sidebarOpen: state.sidebarOpen,
         }),
       },

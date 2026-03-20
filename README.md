@@ -1,17 +1,18 @@
-# PhilRice Web Dashboard
+# PhilRice AI Dashboard
 
-Modern, fully-typed React dashboard application built with the latest tech stack.
+Professional AI-powered rice quality analysis platform with real-time analytics, multi-device management, and role-based access control.
 
-**See [TECH_STACK.md](./TECH_STACK.md) for detailed technology information and setup guides.**
+## 🎯 Key Features
 
-## Quick Start
+- **Multi-Device Management** - Connect and group analysis devices across facilities
+- **Real-Time Analytics** - Track grain quality metrics with interactive charts
+- **Role-Based Access** - PI-protected access for principal investigators
+- **6 Professional Themes** - VSCode-like themes (Light, Dark, Monokai, Nord, Dracula, Solarized)
+- **Secure Authentication** - Email/password login with PI key option
+- **Pre-Commit Hooks** - Automatic linting and build verification
+- **Type-Safe API Integration** - OpenAPI-ready architecture
 
-### Prerequisites
-
-- Node.js 18+
-- npm or pnpm
-
-### Installation & Development
+## 🚀 Quick Start
 
 ```bash
 # Install dependencies
@@ -23,250 +24,330 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Available Scripts
+## 📖 Application Pages
+
+| Route        | Purpose                      | Auth Required |
+| ------------ | ---------------------------- | ------------- |
+| `/`          | Landing page with features   | No            |
+| `/login`     | Authentication               | No            |
+| `/register`  | Account creation + PI access | No            |
+| `/dashboard` | Main analytics platform      | Yes           |
+
+## 🔐 Demo Credentials
+
+### Standard User
+
+- Email: `any@email.com`
+- Password: `password123` (or any 8+ char password)
+- Role: User
+
+### PI (Principal Investigator)
+
+- Email: `pi@example.com`
+- Password: `password123`
+- **PI Key: `PHILRICE-PI-2026`** (enter during registration)
+- Role: Admin
+
+## 📊 Dashboard Highlights
+
+### Summary Cards
+
+- **Total Samples**: 2,847 analyzed
+- **Quality A %**: 68% grade A results
+- **Online Devices**: Real-time status
+- **Avg Moisture**: Stored moisture levels
+
+### Device Management
+
+- View connected analyzers
+- Group devices (Lab, Field, Storage)
+- Monitor last seen timestamp
+- Track samples per device
+
+### Analytics Charts
+
+- **Quality Distribution**: 30-day trend lines
+- **Moisture Content**: 14-day bar chart
+- **Quality Pie Chart**: A/B/C/D grade breakdown
+- **Recent Results**: Latest 10 analyses
+
+### Quality Grades
+
+- **Grade A** (68%) - Green - Best quality
+- **Grade B** (18%) - Blue - Good quality
+- **Grade C** (10%) - Amber - Fair quality
+- **Grade D** (4%) - Red - Poor quality
+
+## 🎨 Theme System
+
+6 professional themes with automatic CSS variable injection:
 
 ```bash
-npm run dev           # Start dev server with HMR
-npm run build         # Build for production
-npm run preview       # Preview production build locally
-
-npm run test          # Run unit tests (Vitest)
-npm run test:ui       # Vitest with UI
-npm run test:e2e      # Run E2E tests (Playwright)
-npm run test:e2e:ui   # Playwright test explorer
-
-npm run lint          # ESLint check
-npm run format        # Prettier format check
-npm run check         # Format + ESLint fix
+# Available themes in app settings
+- light      (Bright interface)
+- dark       (Default)
+- monokai    (Popular editor theme)
+- nord       (Arctic blue palette)
+- dracula    (Dark vampire theme)
+- solarized  (Precision colors)
 ```
 
-## Tech Stack Overview
+Theme selection persists in localStorage.
 
-- **Frontend**: React 19 + TypeScript
-- **Build**: Vite
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Routing**: TanStack Router
-- **Data Fetching**: TanStack Query + Axios + OpenAPI
-- **Forms**: React Hook Form + Zod
-- **State**: Zustand
-- **Testing**: Vitest + Playwright
-- **Charts**: Recharts
+## 🛠 Available Scripts
 
-See [TECH_STACK.md](./TECH_STACK.md) for:
+```bash
+# Development
+npm run dev              # Start dev server with HMR
+npm run build            # Build for production
+npm run preview          # Preview production build
 
-- Full technology breakdown
-- Project structure guide
-- Setup instructions
-- Backend recommendations (NestJS)
-- Deployment guidelines
+# Testing
+npm run test             # Unit tests (Vitest)
+npm run test:e2e         # E2E tests (Playwright)
+npm run test:e2e:ui      # Interactive test explorer
 
-## Project Structure
+# Code Quality
+npm run lint             # Check code
+npm run format           # Check formatting
+npm run check            # Format + lint fix
+
+# Pre-Commit
+npm run pre-commit       # Lint staged + build
+```
+
+## 📁 Project Structure
 
 ```
 src/
-├── api/              # API clients and types
-├── components/       # React components
-├── hooks/            # Custom hooks
-├── lib/              # Utilities and schemas
-├── providers/        # Context providers
-├── routes/           # TanStack Router pages
-├── store/            # Zustand stores
-└── styles.css        # Global styles
+├── pages/               # Page components
+│   ├── LandingPage.tsx
+│   ├── LoginPage.tsx
+│   ├── RegisterPage.tsx
+│   └── DashboardPage.tsx
+├── routes/              # TanStack Router
+│   ├── __root.tsx
+│   ├── index.tsx
+│   ├── login.tsx
+│   ├── register.tsx
+│   └── dashboard.tsx
+├── lib/                 # Utilities
+│   ├── themes.ts       # 6 color themes
+│   ├── mockData.ts     # Mock analytics data
+│   ├── schemas.ts      # Zod validation
+│   └── utils.ts        # Helpers
+├── store/              # Zustand state
+│   └── appStore.ts
+├── providers/          # React context
+│   ├── ThemeProvider.tsx
+│   └── QueryProvider.tsx
+├── api/                # API client
+│   ├── client.ts
+│   └── types/openapi.ts
+├── hooks/              # Custom hooks
+│   └── useApi.ts
+└── styles.css
 
-e2e/                  # Playwright E2E tests
+e2e/                    # Playwright tests
+.husky/                 # Git hooks
 ```
 
-## Environment Setup
+## 🔄 Git Pre-Commit Hooks
 
-1. Copy `.env.example` to `.env.local`
-2. Update with your API endpoint and configuration
-3. See [TECH_STACK.md](./TECH_STACK.md) for detailed setup steps
+Automatic checks before each commit:
 
-## Contributing
-
-Refer to [TECH_STACK.md](./TECH_STACK.md) for:
-
-- Code style guidelines
-- Component structure patterns
-- Testing requirements
-- CI/CD workflow
-
-## Resources
-
-- [TECH_STACK.md](./TECH_STACK.md) - Comprehensive technology guide
-- [Vite Documentation](https://vitejs.dev)
-- [React Documentation](https://react.dev)
-- [TanStack Documentation](https://tanstack.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Shadcn/UI](https://ui.shadcn.com)
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
-
-## Linting & Formatting
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
+1. **ESLint** - Code style check & fix
+2. **Prettier** - Format check & fix
+3. **Build Test** - Ensures project compiles
 
 ```bash
-npm run lint
-npm run format
-npm run check
+# Hooks run automatically
+git commit -m "Feature: add device grouping"
+
+# If hooks fail, auto-fixes are applied
+# Re-stage and commit again
+git add .
+git commit -m "Feature: add device grouping"
+
+# To skip (not recommended)
+git commit --no-verify
 ```
 
-## Routing
+## 📱 Device Management
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
+### Add Device
 
-### Adding A Route
+Click "Add Device" button to:
 
-To add a new route to your application just add a new file in the `./src/routes` directory.
+- Set device name
+- Assign optional group
+- Start monitoring
 
-TanStack will automatically generate the content of the route file for you.
+### Device Groups
 
-Now that you have two routes you can use a `Link` component to navigate between them.
+Organize by location/function:
 
-### Adding Links
+- **Lab** - Laboratory analyzers
+- **Field** - Remote stations
+- **Storage** - Warehouse monitors
 
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
+### Device Status
 
-```tsx
-import { Link } from '@tanstack/react-router'
+- **Online** (🟢) - Active
+- **Offline** (🔴) - Not reporting
+- Last seen timestamp
+
+## 💾 Technology Stack
+
+See [TECH_STACK.md](./TECH_STACK.md) for complete tech breakdown.
+
+**Frontend:**
+
+- React 19 + TypeScript
+- Vite (build tool)
+- TanStack Router
+- TanStack Query
+- Tailwind CSS 4
+- Recharts (charts)
+- Zod (validation)
+- Zustand (state)
+
+**Testing:**
+
+- Playwright (E2E)
+- Vitest (Unit)
+
+**DevOps:**
+
+- Husky (pre-commit)
+- ESLint + Prettier
+- OpenAPI integration ready
+
+## 🔌 API Integration Ready
+
+Ready to connect to NestJS backend:
+
+1. Start backend on http://localhost:3001
+2. Expose OpenAPI spec at `/api-json`
+3. Generate types:
+   ```bash
+   npx openapi-typescript http://localhost:3001/api-json -o src/api/types/openapi.ts
+   ```
+4. Use in components:
+   ```typescript
+   const { data } = apiClient.GET('/api/grains', { params: {...} })
+   ```
+
+See [TECH_STACK.md](./TECH_STACK.md) for backend setup.
+
+## 📚 Documentation
+
+- **[APP_IMPLEMENTATION.md](./APP_IMPLEMENTATION.md)** - Complete app features & flow
+- **[TECH_STACK.md](./TECH_STACK.md)** - Technology overview
+- **[.env.example](./.env.example)** - Environment variables
+
+## 🧪 Testing
+
+### E2E Tests
+
+```bash
+npm run test:e2e
+
+# Examples in e2e/example.spec.ts
+- Landing page display
+- Login/Register flows
+- Dashboard access control
+- Chart rendering
 ```
 
-Then anywhere in your JSX you can use it like so:
+### Unit Tests
 
-```tsx
-<Link to="/about">About</Link>
+```bash
+npm run test
+
+# Test theme switching, auth, data filtering
 ```
 
-This will create a link that will navigate to the `/about` route.
+## 🚀 Building & Deployment
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+### Local Build
 
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
+```bash
+npm run build
+npm run preview
 ```
 
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
+### Production Deployment
 
-## Server Functions
+1. Update API base URL in `.env`
+2. Verify authentication
+3. Test all themes
+4. Run security audit
+5. Deploy to Vercel/Netlify/Docker
 
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
+## 🎨 Customization
 
-```tsx
-import { createServerFn } from '@tanstack/react-start'
+### Adding Components
 
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-
-  return <div>Server time: {time}</div>
-}
+```bash
+npx shadcn-ui@latest add button
+npx shadcn-ui@latest add form
 ```
 
-## API Routes
+### Changing Colors
 
-You can create API routes by using the `server` property in your route definitions:
+Edit `src/lib/themes.ts` - 6 themes with full color control.
 
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
+### Mock Data
 
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
+Edit `src/lib/mockData.ts` for different analytics scenarios.
+
+## 🐛 Troubleshooting
+
+### Port 3000 in use
+
+```bash
+PORT=3001 npm run dev
 ```
 
-## Data Fetching
+### Build errors
 
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
+```bash
+rm -r node_modules
+npm install
+npm run build
 ```
 
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
+### Theme not applying
 
-# Demo files
+Check browser DevTools - CSS variables should be set on `<html>` root.
 
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
+## 🤝 Contributing
 
-# Learn More
+1. Create feature branch
+2. Make changes
+3. Pre-commit hooks run automatically
+4. Push when checks pass
 
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+## 📖 Learn More
 
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+- [React Documentation](https://react.dev)
+- [TanStack Router](https://tanstack.com/router)
+- [Tailwind CSS](https://tailwindcss.com)
+- [Recharts](https://recharts.org)
+- [Zod Validation](https://zod.dev)
+- [Playwright Testing](https://playwright.dev)
+
+## 📄 License
+
+MIT License - See LICENSE file
+
+---
+
+**🎉 Ready to develop!**
+
+```bash
+npm run dev
+```
+
+Visit http://localhost:3000 to start analyzing rice quality data!

@@ -1,4 +1,6 @@
-import createClient, { type ClientOptions } from 'openapi-fetch'
+import axios from 'axios'
+import createClient from 'openapi-fetch'
+import type { ClientOptions } from 'openapi-fetch'
 import type { paths } from './types/openapi' // This will be generated from your OpenAPI schema
 
 /**
@@ -24,8 +26,6 @@ export const apiClient = createApiClient()
 /**
  * Configure axios for non-OpenAPI endpoints
  */
-import axios from 'axios'
-
 export const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
   headers: {

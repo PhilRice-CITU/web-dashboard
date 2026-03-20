@@ -1,8 +1,5 @@
-import {
-  useMutation,
-  useQuery,
-  type UseQueryOptions,
-} from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import type { UseQueryOptions } from '@tanstack/react-query'
 import { httpClient } from '#/api/client'
 import type { AxiosError } from 'axios'
 
@@ -53,9 +50,9 @@ export const useFetch = <T>({
  * mutate({ name: 'John', email: 'john@example.com' });
  * ```
  */
-export const useCreate = <T, D = unknown>(url: string) => {
-  return useMutation<T, AxiosError, D>({
-    mutationFn: async (data: D) => {
+export const useCreate = <T, TVariables = unknown>(url: string) => {
+  return useMutation<T, AxiosError, TVariables>({
+    mutationFn: async (data: TVariables) => {
       const response = await httpClient.post<T>(url, data)
       return response.data
     },
@@ -65,9 +62,9 @@ export const useCreate = <T, D = unknown>(url: string) => {
 /**
  * Hook for updating data
  */
-export const useUpdate = <T, D = unknown>(url: string) => {
-  return useMutation<T, AxiosError, D>({
-    mutationFn: async (data: D) => {
+export const useUpdate = <T, TVariables = unknown>(url: string) => {
+  return useMutation<T, AxiosError, TVariables>({
+    mutationFn: async (data: TVariables) => {
       const response = await httpClient.patch<T>(url, data)
       return response.data
     },
