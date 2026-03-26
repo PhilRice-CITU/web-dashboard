@@ -27,15 +27,15 @@ const teamMembers = [
 
 export function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#f6f8fa] text-[#0a0a0a]">
+    <div className="min-h-screen bg-[#f6f8fa] text-[#0a0a0a] lg:pt-20">
       <Button
         variant={'ghost'}
-        className="flex absolute top-4 left-4 h-10 w-10"
+        className="flex absolute top-4 left-4 h-10 w-10 "
         onClick={() => window.history.back()}
       >
         <ArrowLeft />
       </Button>
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-10 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-14 lg:px-10 lg:mt-20">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 bg-[#f6f8fa] px-6 py-10 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-14 lg:px-10">
         <aside className="h-fit lg:sticky lg:top-8">
           <a
             href="/"
