@@ -223,22 +223,131 @@ See [TECH_STACK.md](./TECH_STACK.md) for complete tech breakdown.
 - ESLint + Prettier
 - OpenAPI integration ready
 
-## 🔌 API Integration Ready
+## 🔌 Backend Integration Guide
 
-Ready to connect to NestJS backend:
+This frontend is currently using mock data in several pages. Use the contract below to connect a real backend with minimal guesswork.
 
-1. Start backend on http://localhost:3001
-2. Expose OpenAPI spec at `/api-json`
-3. Generate types:
-   ```bash
-   npx openapi-typescript http://localhost:3001/api-json -o src/api/types/openapi.ts
-   ```
-4. Use in components:
-   ```typescript
-   const { data } = apiClient.GET('/api/grains', { params: {...} })
-   ```
+### Environment Variables
 
-See [TECH_STACK.md](./TECH_STACK.md) for backend setup.
+Set these in your `.env` file:
+
+```bash
+VITE_API_BASE_URL=http://localhost:3001
+VITE_WS_BASE_URL=ws://localhost:3001
+```
+
+- `VITE_API_BASE_URL` is already used by `src/api/client.ts`.
+- `VITE_WS_BASE_URL` is recommended for live events/log streaming.
+
+### Auth Model Expected by Frontend
+
+The app expects a bearer token in local storage key `authToken`.
+
+- Request interceptor sends: `Authorization: Bearer <token>`
+- On `401`, frontend clears token and redirects to `/login`
+
+Recommended auth endpoints:
+
+- `POST /api/auth/login`
+- `POST /api/auth/register`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+
+### Required REST Endpoints by Feature
+
+#### Dashboard Page
+
+- `GET /api/dashboard/summary`
+  - Returns cards: total samples, online devices, avg moisture, avg broken grains.
+- `GET /api/dashboard/grade-distribution`
+  - Returns grade rows used in distribution panel.
+- `GET /api/dashboard/moisture-watch`
+  - Returns moisture risk list.
+
+#### Devices Page
+
+- `GET /api/devices`
+  - Returns device list with: `id`, `name`, `group`, `status`, `lastSeen`, `samplesProcessed`, `cpu`, `latitude`, `longitude`, `location`.
+- `POST /api/devices`
+  - Add device from the "Add Device" panel.
+- `PATCH /api/devices/:id`
+  - Update group/location/status metadata.
+- `GET /api/devices/:id/telemetry`
+  - Returns live metrics shown in telemetry tiles.
+- `POST /api/devices/:id/actions`
+  - Body: `{ action: 'capture' | 'restart-app' | 'restart-device' | 'shutdown-device' | 'view-device' }`
+  - Used by quick actions and expanded control buttons.
+- `GET /api/devices/:id/camera/snapshot` (optional)
+  - If not implementing stream yet, return latest snapshot URL.
+
+#### Analytics Page
+
+- `GET /api/analytics/timeseries`
+  - Query params:
+    - `startDate`, `endDate`
+    - `station`
+    - `grade`
+    - `granularity` (`daily` | `weekly`)
+    - `aggregation` (`sum` | `avg` | `min` | `max`)
+  - Returns rows with keys used by charts:
+    - `date`, `totalGrains`, `totalSamples`, `qualityA`, `qualityB`, `qualityC`, `qualityD`,
+    - `avgMoisture`, `avgBrokenGrains`, `avgForeignMatter`, `avgChalkiness`, `avgDiscoloration`, `avgLengthMm`, `avgQualityScore`.
+- `GET /api/analytics/headline`
+  - Optional helper endpoint for top summary cards.
+
+#### Logs Page
+
+- `GET /api/logs/events`
+  - Query params: `search`, `device`, `level`, `from`, `to`, `limit`, `cursor`.
+  - Returns events: `time`, `device`, `level`, `message`.
+- `GET /api/logs/export`
+  - Supports CSV/JSON export for the "Export Logs" action.
+
+### WebSocket Channels / Events
+
+Use a single socket endpoint for simplicity:
+
+- `GET ws://<host>/ws` or `GET ws://<host>/ws/realtime`
+
+Recommended event names and payload context:
+
+- `device.heartbeat`
+  - `{ deviceId, status, cpu, memory, storage, temperature, queueDepth, cameraStatus, networkLatencyMs, timestamp }`
+- `device.status.changed`
+  - `{ deviceId, from, to, timestamp, reason }`
+- `analysis.result.created`
+  - `{ resultId, deviceId, qualityGrade, qualityScore, moistureContent, totalGrains, timestamp }`
+- `logs.event`
+  - `{ time, device, level, message }`
+- `command.ack`
+  - `{ commandId, deviceId, action, state, message, timestamp }`
+
+Minimum usage by page:
+
+- Dashboard: `device.heartbeat`, `device.status.changed`, `analysis.result.created`, `logs.event`
+- Devices: `device.heartbeat`, `device.status.changed`, `command.ack`
+- Logs: `logs.event`
+
+### OpenAPI + Type Generation
+
+Expose OpenAPI schema and regenerate client types:
+
+```bash
+npx openapi-typescript http://localhost:3001/api-json -o src/api/types/openapi.ts
+```
+
+Then use `apiClient` from `src/api/client.ts` for typed requests.
+
+### Integration Checklist
+
+1. Implement all endpoints listed above with stable response shapes.
+2. Return ISO timestamps (UTC) for all date/time fields.
+3. Send auth token in login/register response.
+4. Broadcast websocket events for heartbeat/logs/actions.
+5. Verify these pages against real backend data: `/dashboard`, `/devices`, `/analytics`, `/logs`.
+
+See [TECH_STACK.md](./TECH_STACK.md) for backend stack alignment.
 
 ## 📚 Documentation
 

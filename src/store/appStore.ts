@@ -14,6 +14,11 @@ interface Device {
   name: string
   group?: string
   lastSeen?: string
+  status?: 'inactive' | 'scanning' | 'active'
+  cpu?: number
+  latitude?: number
+  longitude?: number
+  location?: string
 }
 
 interface AppState {

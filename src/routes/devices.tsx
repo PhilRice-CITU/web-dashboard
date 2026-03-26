@@ -1,20 +1,21 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
-import { DashboardPage } from '#/pages/DashboardPage'
+
+import { DevicesPage } from '#/pages/DevicesPage'
 import { useAppStore } from '#/store/appStore'
 
-export const Route = createFileRoute('/dashboard')({
+export const Route = createFileRoute('/devices')({
   head: () => ({
-    meta: [{ title: 'hum.ai | Platform' }],
+    meta: [{ title: 'hum.ai | Devices' }],
   }),
-  component: DashboardRouteComponent,
+  component: DevicesRouteComponent,
 })
 
-function DashboardRouteComponent() {
+function DevicesRouteComponent() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated)
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />
   }
 
-  return <DashboardPage />
+  return <DevicesPage />
 }

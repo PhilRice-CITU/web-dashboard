@@ -1,7 +1,6 @@
 import * as React from 'react'
 
 import { NavMain } from '#/components/nav-main'
-import { NavProjects } from '#/components/nav-projects'
 import { NavSecondary } from '#/components/nav-secondary'
 import { NavUser } from '#/components/nav-user'
 import {
@@ -16,137 +15,54 @@ import {
 import {
   BotIcon,
   BookOpenIcon,
-  FrameIcon,
-  LifeBuoyIcon,
-  MapIcon,
+  CommandIcon,
+  FileClockIcon,
   PieChartIcon,
-  SendIcon,
-  Settings2Icon,
-  TerminalSquareIcon,
 } from 'lucide-react'
 
 const data = {
   user: {
-    name: 'hum.ai Admin',
+    name: 'Henry Corpus',
     email: 'admin@hum.ai',
     avatar: '/avatars/shadcn.jpg',
   },
   navMain: [
     {
-      title: 'Dashboard',
+      title: 'Operations',
       url: '/dashboard',
-      icon: <TerminalSquareIcon />,
-      isActive: true,
-      items: [
-        {
-          title: 'Overview',
-          url: '/dashboard',
-        },
-        {
-          title: 'Analytics',
-          url: '#',
-        },
-        {
-          title: 'Alerts',
-          url: '#',
-        },
-      ],
+      icon: <CommandIcon />,
     },
     {
       title: 'Devices',
-      url: '#',
+      url: '/devices',
       icon: <BotIcon />,
-      items: [
-        {
-          title: 'All Devices',
-          url: '#',
-        },
-        {
-          title: 'Groups',
-          url: '#',
-        },
-        {
-          title: 'Maintenance',
-          url: '#',
-        },
-      ],
     },
     {
-      title: 'Reports',
-      url: '#',
-      icon: <BookOpenIcon />,
-      items: [
-        {
-          title: 'Daily',
-          url: '#',
-        },
-        {
-          title: 'Weekly',
-          url: '#',
-        },
-        {
-          title: 'Export',
-          url: '#',
-        },
-      ],
+      title: 'Analytics',
+      url: '/analytics',
+      icon: <PieChartIcon />,
     },
     {
-      title: 'Settings',
-      url: '#',
-      icon: <Settings2Icon />,
-      items: [
-        {
-          title: 'General',
-          url: '#',
-        },
-        {
-          title: 'Team',
-          url: '#',
-        },
-        {
-          title: 'Access',
-          url: '#',
-        },
-      ],
+      title: 'Logs',
+      url: '/logs',
+      icon: <FileClockIcon />,
     },
   ],
   navSecondary: [
     {
-      title: 'Support',
-      url: '#',
-      icon: <LifeBuoyIcon />,
-    },
-    {
-      title: 'Feedback',
-      url: '#',
-      icon: <SendIcon />,
-    },
-  ],
-  projects: [
-    {
-      name: 'Lab Ops',
-      url: '#',
-      icon: <FrameIcon />,
-    },
-    {
-      name: 'Rice Quality',
-      url: '#',
-      icon: <PieChartIcon />,
-    },
-    {
-      name: 'Field Visits',
-      url: '#',
-      icon: <MapIcon />,
+      title: 'Documentation',
+      url: '/docs',
+      icon: <BookOpenIcon />,
     },
   ],
 }
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="floating" collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<a href="#" />}>
+            <SidebarMenuButton size="lg" render={<a href="/dashboard" />}>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
                 <img
                   src="/logo-icon.svg"
@@ -162,12 +78,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-1">
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="px-2">
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
