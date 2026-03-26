@@ -19,44 +19,42 @@ import {
   FileClockIcon,
   PieChartIcon,
 } from 'lucide-react'
+import { useAppStore } from '#/store/appStore'
 
-const data = {
-  user: {
-    name: 'Henry Corpus',
-    email: 'admin@hum.ai',
-    avatar: '/avatars/shadcn.jpg',
+const navMain = [
+  {
+    title: 'Operations',
+    url: '/dashboard',
+    icon: <CommandIcon />,
   },
-  navMain: [
-    {
-      title: 'Operations',
-      url: '/dashboard',
-      icon: <CommandIcon />,
-    },
-    {
-      title: 'Devices',
-      url: '/devices',
-      icon: <BotIcon />,
-    },
-    {
-      title: 'Analytics',
-      url: '/analytics',
-      icon: <PieChartIcon />,
-    },
-    {
-      title: 'Logs',
-      url: '/logs',
-      icon: <FileClockIcon />,
-    },
-  ],
-  navSecondary: [
-    {
-      title: 'Documentation',
-      url: '/docs',
-      icon: <BookOpenIcon />,
-    },
-  ],
-}
+  {
+    title: 'Devices',
+    url: '/devices',
+    icon: <BotIcon />,
+  },
+  {
+    title: 'Analytics',
+    url: '/analytics',
+    icon: <PieChartIcon />,
+  },
+  {
+    title: 'Logs',
+    url: '/logs',
+    icon: <FileClockIcon />,
+  },
+]
+
+const navSecondary = [
+  {
+    title: 'Documentation',
+    url: '/docs',
+    icon: <BookOpenIcon />,
+  },
+]
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const user = useAppStore((state) => state.user)
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -79,11 +77,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="px-1">
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter className="px-2">
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            name: user?.name ?? '',
+            email: user?.email ?? '',
+            avatar: '/avatars/shadcn.jpg',
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   )

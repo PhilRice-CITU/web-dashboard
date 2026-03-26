@@ -2,6 +2,7 @@ import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { QueryProvider } from '#/providers/QueryProvider'
+import { AuthProvider } from '#/providers/AuthProvider'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -60,7 +61,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="m-0 p-0 wrap-anywhere font-sans antialiased">
         <QueryProvider>
-          {children}
+          <AuthProvider>{children}</AuthProvider>
           <TanStackDevtools
             config={{
               position: 'bottom-right',

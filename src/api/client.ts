@@ -1,18 +1,9 @@
 import axios from 'axios'
 import createClient from 'openapi-fetch'
 import type { ClientOptions } from 'openapi-fetch'
-import type { paths } from './types/openapi' // This will be generated from your OpenAPI schema
+import type { paths } from './types/openapi'
+import { supabase } from '#/lib/supabase'
 
-/**
- * Configure your OpenAPI client here
- *
- * Example usage:
- * ```
- * const { data, error } = await client.GET('/api/users/{id}', {
- *   params: { path: { id: '123' } }
- * });
- * ```
- */
 export const createApiClient = (options?: ClientOptions) => {
   return createClient<paths>({
     baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
@@ -20,12 +11,8 @@ export const createApiClient = (options?: ClientOptions) => {
   })
 }
 
-// Export a default instance
 export const apiClient = createApiClient()
 
-/**
- * Configure axios for non-OpenAPI endpoints
- */
 export const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
   headers: {
@@ -33,23 +20,21 @@ export const httpClient = axios.create({
   },
 })
 
-// Add request interceptor for auth tokens
-httpClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+httpClient.interceptors.request.use(async (config) => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (session?.access_token) {
+    config.headers.Authorization = `Bearer ${session.access_token}`
   }
   return config
 })
 
-// Add response interceptor for error handling
 httpClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized
-      localStorage.removeItem('authToken')
-      window.location.href = '/login'
+      await supabase.auth.signOut()
     }
     return Promise.reject(error)
   },

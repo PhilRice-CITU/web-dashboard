@@ -1,18 +1,17 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { loginSchema } from '#/lib/schemas'
 import type { LoginFormData } from '#/lib/schemas'
-import { useAppStore } from '#/store/appStore'
+import { useLogin, useGoogleLogin } from '#/hooks/useAuth'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const setUser = useAppStore((state) => state.setUser)
-  const [isLoading, setIsLoading] = useState(false)
+  const login = useLogin()
+  const googleLogin = useGoogleLogin()
 
   const {
     register,
@@ -23,18 +22,7 @@ export function LoginPage() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setUser({
-        id: 'user-001',
-        name: 'John Demo',
-        email: data.email,
-        role: 'admin',
-      })
-      setIsLoading(false)
-      navigate({ to: '/dashboard' })
-    }, 1000)
+    await login.mutateAsync(data)
   }
 
   return (
@@ -59,6 +47,8 @@ export function LoginPage() {
           <Button
             type="button"
             variant="outline"
+            onClick={() => googleLogin.mutate()}
+            disabled={googleLogin.isPending}
             className="h-14 w-full rounded-full border-[#d4d4d8] bg-transparent text-base gap-6"
           >
             <img src="https://logos.hunter.io/google.com" className="h-5 w-5" />
@@ -98,12 +88,18 @@ export function LoginPage() {
               </p>
             )}
 
+            {login.error && (
+              <p className="px-1 text-sm text-destructive">
+                {login.error.message}
+              </p>
+            )}
+
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={login.isPending}
               className="h-14 w-full rounded-full bg-[#02040b] text-base font-semibold text-white hover:bg-black/90"
             >
-              {isLoading ? 'Logging in...' : 'Continue'}
+              {login.isPending ? 'Logging in...' : 'Continue'}
             </Button>
           </form>
 

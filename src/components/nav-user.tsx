@@ -22,6 +22,7 @@ import {
   BellIcon,
   LogOutIcon,
 } from 'lucide-react'
+import { useLogout } from '#/hooks/useAuth'
 
 export function NavUser({
   user,
@@ -33,6 +34,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const logout = useLogout()
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -95,7 +97,10 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => logout.mutate()}
+              disabled={logout.isPending}
+            >
               <LogOutIcon />
               Log out
             </DropdownMenuItem>

@@ -1,12 +1,11 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
-interface User {
+export interface User {
   id: string
   name: string
   email: string
   role: 'admin' | 'user' | 'viewer'
-  deviceId?: string
 }
 
 interface Device {
@@ -22,42 +21,29 @@ interface Device {
 }
 
 interface AppState {
-  // User state
   user: User | null
   isAuthenticated: boolean
   setUser: (user: User | null) => void
   logout: () => void
 
-  // Device state
   devices: Device[]
   setDevices: (devices: Device[]) => void
   addDevice: (device: Device) => void
   removeDevice: (deviceId: string) => void
 
-  // UI state
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
 }
 
-/**
- * Global application state using Zustand
- *
- * Usage:
- * ```
- * const { user, isAuthenticated } = useAppStore();
- * ```
- */
 export const useAppStore = create<AppState>()(
   devtools(
     persist(
       (set) => ({
-        // Initial state
         user: null,
         isAuthenticated: false,
         devices: [],
         sidebarOpen: true,
 
-        // User actions
         setUser: (user) =>
           set({
             user,
@@ -71,7 +57,6 @@ export const useAppStore = create<AppState>()(
             devices: [],
           }),
 
-        // Device actions
         setDevices: (devices) => set({ devices }),
 
         addDevice: (device) =>
@@ -84,11 +69,10 @@ export const useAppStore = create<AppState>()(
             devices: state.devices.filter((d) => d.id !== deviceId),
           })),
 
-        // UI actions
         setSidebarOpen: (open) => set({ sidebarOpen: open }),
       }),
       {
-        name: 'app-store', // localStorage key
+        name: 'app-store',
         partialize: (state) => ({
           sidebarOpen: state.sidebarOpen,
         }),
