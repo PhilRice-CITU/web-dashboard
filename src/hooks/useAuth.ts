@@ -50,11 +50,21 @@ export function useRegister() {
     mutationFn: async ({
       email,
       password,
+      first_name,
+      last_name,
     }: {
       email: string
       password: string
+      first_name: string
+      last_name: string
     }) => {
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { first_name, last_name, role: 'admin' },
+        },
+      })
       if (error) throw error
       return data
     },
@@ -89,7 +99,7 @@ export function useGoogleLogin() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
       if (error) throw error

@@ -17,6 +17,7 @@ import {
   BookOpenIcon,
   CommandIcon,
   FileClockIcon,
+  MessageSquareIcon,
   PieChartIcon,
 } from 'lucide-react'
 import { useAppStore } from '#/store/appStore'
@@ -45,6 +46,11 @@ const navMain = [
 ]
 
 const navSecondary = [
+  {
+    title: 'Suggestions',
+    url: '/suggestions',
+    icon: <MessageSquareIcon />,
+  },
   {
     title: 'Documentation',
     url: '/docs',

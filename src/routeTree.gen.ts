@@ -15,6 +15,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthCompleteProfileRouteImport } from './routes/auth.complete-profile'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedSuggestionsRouteImport } from './routes/_authenticated/suggestions'
 import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/logs'
 import { Route as AuthenticatedDocsRouteImport } from './routes/_authenticated/docs'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
@@ -50,6 +53,22 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCompleteProfileRoute = AuthCompleteProfileRouteImport.update({
+  id: '/auth/complete-profile',
+  path: '/auth/complete-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSuggestionsRoute =
+  AuthenticatedSuggestionsRouteImport.update({
+    id: '/suggestions',
+    path: '/suggestions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedLogsRoute = AuthenticatedLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
@@ -87,6 +106,9 @@ export interface FileRoutesByFullPath {
   '/devices': typeof AuthenticatedDevicesRoute
   '/docs': typeof AuthenticatedDocsRoute
   '/logs': typeof AuthenticatedLogsRoute
+  '/suggestions': typeof AuthenticatedSuggestionsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/complete-profile': typeof AuthCompleteProfileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +121,9 @@ export interface FileRoutesByTo {
   '/devices': typeof AuthenticatedDevicesRoute
   '/docs': typeof AuthenticatedDocsRoute
   '/logs': typeof AuthenticatedLogsRoute
+  '/suggestions': typeof AuthenticatedSuggestionsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/complete-profile': typeof AuthCompleteProfileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +138,9 @@ export interface FileRoutesById {
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/docs': typeof AuthenticatedDocsRoute
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
+  '/_authenticated/suggestions': typeof AuthenticatedSuggestionsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/complete-profile': typeof AuthCompleteProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +155,9 @@ export interface FileRouteTypes {
     | '/devices'
     | '/docs'
     | '/logs'
+    | '/suggestions'
+    | '/auth/callback'
+    | '/auth/complete-profile'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +170,9 @@ export interface FileRouteTypes {
     | '/devices'
     | '/docs'
     | '/logs'
+    | '/suggestions'
+    | '/auth/callback'
+    | '/auth/complete-profile'
   id:
     | '__root__'
     | '/'
@@ -152,6 +186,9 @@ export interface FileRouteTypes {
     | '/_authenticated/devices'
     | '/_authenticated/docs'
     | '/_authenticated/logs'
+    | '/_authenticated/suggestions'
+    | '/auth/callback'
+    | '/auth/complete-profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -161,6 +198,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   TermsRoute: typeof TermsRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthCompleteProfileRoute: typeof AuthCompleteProfileRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -207,6 +246,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/complete-profile': {
+      id: '/auth/complete-profile'
+      path: '/auth/complete-profile'
+      fullPath: '/auth/complete-profile'
+      preLoaderRoute: typeof AuthCompleteProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/suggestions': {
+      id: '/_authenticated/suggestions'
+      path: '/suggestions'
+      fullPath: '/suggestions'
+      preLoaderRoute: typeof AuthenticatedSuggestionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/logs': {
       id: '/_authenticated/logs'
       path: '/logs'
@@ -251,6 +311,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedDocsRoute: typeof AuthenticatedDocsRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
+  AuthenticatedSuggestionsRoute: typeof AuthenticatedSuggestionsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -259,6 +320,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedDocsRoute: AuthenticatedDocsRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
+  AuthenticatedSuggestionsRoute: AuthenticatedSuggestionsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -272,6 +334,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   TermsRoute: TermsRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthCompleteProfileRoute: AuthCompleteProfileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

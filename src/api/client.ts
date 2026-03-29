@@ -32,10 +32,5 @@ httpClient.interceptors.request.use(async (config) => {
 
 httpClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      await supabase.auth.signOut()
-    }
-    return Promise.reject(error)
-  },
+  (error) => Promise.reject(error),
 )
