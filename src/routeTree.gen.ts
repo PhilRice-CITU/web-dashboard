@@ -19,6 +19,7 @@ import { Route as AuthCompleteProfileRouteImport } from './routes/auth.complete-
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedSuggestionsRouteImport } from './routes/_authenticated/suggestions'
 import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/logs'
+import { Route as AuthenticatedImagesRouteImport } from './routes/_authenticated/images'
 import { Route as AuthenticatedDocsRouteImport } from './routes/_authenticated/docs'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -74,6 +75,11 @@ const AuthenticatedLogsRoute = AuthenticatedLogsRouteImport.update({
   path: '/logs',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedImagesRoute = AuthenticatedImagesRouteImport.update({
+  id: '/images',
+  path: '/images',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDocsRoute = AuthenticatedDocsRouteImport.update({
   id: '/docs',
   path: '/docs',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/docs': typeof AuthenticatedDocsRoute
+  '/images': typeof AuthenticatedImagesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/suggestions': typeof AuthenticatedSuggestionsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/docs': typeof AuthenticatedDocsRoute
+  '/images': typeof AuthenticatedImagesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/suggestions': typeof AuthenticatedSuggestionsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/docs': typeof AuthenticatedDocsRoute
+  '/_authenticated/images': typeof AuthenticatedImagesRoute
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
   '/_authenticated/suggestions': typeof AuthenticatedSuggestionsRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/docs'
+    | '/images'
     | '/logs'
     | '/suggestions'
     | '/auth/callback'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/docs'
+    | '/images'
     | '/logs'
     | '/suggestions'
     | '/auth/callback'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
     | '/_authenticated/docs'
+    | '/_authenticated/images'
     | '/_authenticated/logs'
     | '/_authenticated/suggestions'
     | '/auth/callback'
@@ -274,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLogsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/images': {
+      id: '/_authenticated/images'
+      path: '/images'
+      fullPath: '/images'
+      preLoaderRoute: typeof AuthenticatedImagesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/docs': {
       id: '/_authenticated/docs'
       path: '/docs'
@@ -310,6 +329,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedDocsRoute: typeof AuthenticatedDocsRoute
+  AuthenticatedImagesRoute: typeof AuthenticatedImagesRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
   AuthenticatedSuggestionsRoute: typeof AuthenticatedSuggestionsRoute
 }
@@ -319,6 +339,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedDocsRoute: AuthenticatedDocsRoute,
+  AuthenticatedImagesRoute: AuthenticatedImagesRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
   AuthenticatedSuggestionsRoute: AuthenticatedSuggestionsRoute,
 }

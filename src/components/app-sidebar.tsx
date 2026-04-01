@@ -17,6 +17,7 @@ import {
   BookOpenIcon,
   CommandIcon,
   FileClockIcon,
+  FolderOpenIcon,
   MessageSquareIcon,
   PieChartIcon,
 } from 'lucide-react'
@@ -32,6 +33,11 @@ const navMain = [
     title: 'Devices',
     url: '/devices',
     icon: <BotIcon />,
+  },
+  {
+    title: 'Images',
+    url: '/images',
+    icon: <FolderOpenIcon />,
   },
   {
     title: 'Analytics',
