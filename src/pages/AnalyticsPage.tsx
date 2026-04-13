@@ -13,6 +13,11 @@ import type {
   ChartBuilderConfig,
 } from '#/components/analytics/types'
 import { PlatformShell } from '#/components/layout/PlatformShell'
+import type {
+  ApiAnalyticsTrendPoint,
+  ApiAnalyticsTrendsResponse,
+} from '#/api/contracts'
+import { useFetch } from '#/hooks/useApi'
 import {
   analyticsMetricCatalog,
   generateMockAnalyticsData,
@@ -211,7 +216,46 @@ export function AnalyticsPage() {
   ])
   const [presets, setPresets] = useState<AnalyticsPreset[]>([])
 
-  const analyticsData = useMemo(() => generateMockAnalyticsData(), [])
+  const trendsUrl = useMemo(() => {
+    const params = new URLSearchParams()
+
+    if (startDate) {
+      params.set('start_date', startDate)
+    }
+
+    if (endDate) {
+      params.set('end_date', endDate)
+    }
+
+    if (stationFilter.trim().length > 0) {
+      params.set('device_id', stationFilter.trim())
+    }
+
+    if (gradeFilter.trim().length > 0 && gradeFilter !== 'all') {
+      params.set('grade_filter', gradeFilter.toUpperCase())
+    }
+
+    const query = params.toString()
+    return query.length > 0 ? `/analytics/trends?${query}` : '/analytics/trends'
+  }, [endDate, gradeFilter, startDate, stationFilter])
+
+  const {
+    data: trendsResponse,
+    isLoading: isTrendsLoading,
+    error: trendsError,
+  } = useFetch<ApiAnalyticsTrendsResponse>({
+    url: trendsUrl,
+    retry: false,
+    refetchInterval: 30_000,
+  })
+
+  const analyticsData = useMemo(() => {
+    if (trendsResponse) {
+      return trendsResponse.data.map(mapTrendPointToAnalyticsData)
+    }
+
+    return generateMockAnalyticsData()
+  }, [trendsResponse])
 
   useEffect(() => {
     try {
@@ -244,9 +288,7 @@ export function AnalyticsPage() {
     return analyticsData.filter((row) => {
       const rowDate = new Date(row.date)
       const normalizedStation = stationFilter.trim().toLowerCase()
-      const matchesStation =
-        normalizedStation.length === 0 ||
-        'philrice ces nationwide'.includes(normalizedStation)
+      const matchesStation = normalizedStation.length === 0
       const matchesDate =
         (!start || rowDate >= start) &&
         (!end || rowDate <= end) &&
@@ -473,6 +515,18 @@ export function AnalyticsPage() {
           </div>
         ) : null}
 
+        {trendsError ? (
+          <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            Failed to load analytics trends from the API.
+          </div>
+        ) : null}
+
+        {isTrendsLoading ? (
+          <div className="rounded-md border border-border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
+            Loading analytics trends...
+          </div>
+        ) : null}
+
         <div className="flex flex-wrap items-center justify-between gap-2 px-4">
           <div className="flex flex-wrap items-center gap-2">
             <Select
@@ -611,4 +665,25 @@ function MetricCard({
       </CardContent>
     </Card>
   )
+}
+
+function mapTrendPointToAnalyticsData(
+  point: ApiAnalyticsTrendPoint,
+): AnalyticsData {
+  return {
+    date: point.date,
+    totalGrains: point.total_grains,
+    totalSamples: point.total_samples,
+    qualityA: point.quality_a,
+    qualityB: point.quality_b,
+    qualityC: point.quality_c,
+    qualityD: point.quality_d,
+    avgMoisture: point.avg_moisture,
+    avgBrokenGrains: point.avg_broken_grains,
+    avgForeignMatter: point.avg_foreign_matter,
+    avgChalkiness: point.avg_chalkiness,
+    avgDiscoloration: point.avg_discoloration,
+    avgLengthMm: point.avg_length_mm,
+    avgQualityScore: point.avg_quality_score,
+  }
 }

@@ -1,7 +1,16 @@
-import { generateMockSummary, mockDevices } from '#/lib/mockData'
+import { useMemo } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import type { Device } from '#/lib/mockData'
 import { ArrowDown, PanelLeftIcon, Plus, Settings } from 'lucide-react'
 import { AppSidebar } from '#/components/app-sidebar'
 import { DeviceMap } from '#/components/map/DeviceMap'
+import {
+  type ApiAnalyticsSummary,
+  type ApiDashboardSummary,
+  type ApiDevice,
+  type ApiDeviceEvent,
+  type ApiDeviceEventsListResponse,
+} from '#/api/contracts'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +19,7 @@ import {
 } from '#/components/ui/breadcrumb'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
+import { useFetch } from '#/hooks/useApi'
 import {
   SidebarInset,
   SidebarProvider,
@@ -18,7 +28,161 @@ import {
 } from '#/components/ui/sidebar'
 
 export function DashboardPage() {
-  const summary = generateMockSummary()
+  const navigate = useNavigate()
+
+  const { data: devicesResponse } = useFetch<ApiDevice[]>({
+    url: '/devices',
+    retry: false,
+    refetchInterval: 30_000,
+  })
+
+  const { data: analyticsResponse } = useFetch<ApiAnalyticsSummary>({
+    url: '/analytics',
+    retry: false,
+    refetchInterval: 30_000,
+  })
+
+  const { data: dashboardResponse } = useFetch<ApiDashboardSummary>({
+    url: '/analytics/dashboard',
+    retry: false,
+    refetchInterval: 30_000,
+  })
+
+  const { data: eventsResponse } = useFetch<ApiDeviceEventsListResponse>({
+    url: '/device-events?page=1&page_size=6',
+    retry: false,
+    refetchInterval: 10_000,
+  })
+
+  const devices = useMemo<Device[]>(() => {
+    if (!devicesResponse || devicesResponse.length === 0) {
+      return []
+    }
+
+    return devicesResponse.map((device, index) =>
+      mapApiDeviceToMapDevice(device, index),
+    )
+  }, [devicesResponse])
+
+  const summary = useMemo(() => {
+    const totalDevices = dashboardResponse?.total_devices ?? devices.length
+    const onlineDevices =
+      dashboardResponse?.online_devices ??
+      devices.filter((device) => device.status !== 'inactive').length
+
+    return {
+      totalSamples: dashboardResponse?.scans_processed_today ?? 0,
+      onlineDevices,
+      totalDevices,
+      avgMoistureContent:
+        dashboardResponse?.avg_moisture ?? analyticsResponse?.avg_moisture ?? 0,
+      avgBrokenGrainPercentage:
+        dashboardResponse?.avg_broken_grains ??
+        analyticsResponse?.avg_broken_grains ??
+        0,
+    }
+  }, [analyticsResponse, dashboardResponse, devices])
+
+  const liveSignalsData = useMemo(() => {
+    if (!eventsResponse?.data || eventsResponse.data.length === 0) {
+      return []
+    }
+
+    return eventsResponse.data.map(mapApiEventToLiveSignal)
+  }, [eventsResponse])
+
+  const riceGradesData = useMemo(() => {
+    if (
+      dashboardResponse?.grade_distribution &&
+      dashboardResponse.grade_distribution.length > 0
+    ) {
+      return dashboardResponse.grade_distribution.map((grade) => ({
+        name: grade.name,
+        value: `${grade.value.toLocaleString()} samples`,
+        share: Math.round(grade.share),
+        status:
+          grade.status === 'negative'
+            ? ('negative' as const)
+            : ('positive' as const),
+      }))
+    }
+
+    if (analyticsResponse) {
+      const total = Math.max(analyticsResponse.total_samples, 1)
+
+      return [
+        {
+          name: 'Grade A',
+          value: `${analyticsResponse.quality_a.toLocaleString()} samples`,
+          share: Math.round((analyticsResponse.quality_a / total) * 100),
+          status: 'positive' as const,
+        },
+        {
+          name: 'Grade B',
+          value: `${analyticsResponse.quality_b.toLocaleString()} samples`,
+          share: Math.round((analyticsResponse.quality_b / total) * 100),
+          status: 'positive' as const,
+        },
+        {
+          name: 'Grade C',
+          value: `${analyticsResponse.quality_c.toLocaleString()} samples`,
+          share: Math.round((analyticsResponse.quality_c / total) * 100),
+          status: 'negative' as const,
+        },
+        {
+          name: 'Grade D',
+          value: `${analyticsResponse.quality_d.toLocaleString()} samples`,
+          share: Math.round((analyticsResponse.quality_d / total) * 100),
+          status: 'negative' as const,
+        },
+      ]
+    }
+
+    return [
+      {
+        name: 'Grade A',
+        value: '0 samples',
+        share: 0,
+        status: 'positive' as const,
+      },
+      {
+        name: 'Grade B',
+        value: '0 samples',
+        share: 0,
+        status: 'positive' as const,
+      },
+      {
+        name: 'Grade C',
+        value: '0 samples',
+        share: 0,
+        status: 'negative' as const,
+      },
+      {
+        name: 'Grade D',
+        value: '0 samples',
+        share: 0,
+        status: 'negative' as const,
+      },
+    ]
+  }, [analyticsResponse, dashboardResponse])
+
+  const moistureWatchData = useMemo(() => {
+    if (
+      dashboardResponse?.moisture_watch &&
+      dashboardResponse.moisture_watch.length > 0
+    ) {
+      return dashboardResponse.moisture_watch.map((item) => ({
+        site: item.device_name,
+        moisture: `${item.moisture.toFixed(1)}%`,
+        delta: `${item.delta >= 0 ? '+' : ''}${item.delta.toFixed(1)}%`,
+        severity:
+          item.severity === 'warn' ? ('warn' as const) : ('ok' as const),
+      }))
+    }
+
+    return []
+  }, [dashboardResponse])
+
   const activeDevices = summary.onlineDevices
 
   return (
@@ -39,7 +203,10 @@ export function DashboardPage() {
               <Settings className="mr-2 size-4" />
               Settings
             </Button>
-            <Button className="h-9 bg-logo-color">
+            <Button
+              className="h-9 bg-logo-color"
+              onClick={() => navigate({ to: '/devices' })}
+            >
               <Plus className="mr-2 size-4" />
               Add Device
             </Button>
@@ -100,7 +267,14 @@ export function DashboardPage() {
                   </Button>
                 </div>
                 <div className="h-124 px-6">
-                  <DeviceMap devices={mockDevices} />
+                  {devices.length > 0 ? (
+                    <DeviceMap devices={devices} />
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-md border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+                      No device connected yet. Add a device to start monitoring
+                      your edge fleet.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -113,12 +287,18 @@ export function DashboardPage() {
                 </div>
                 <div className="hide-scrollbar h-full overflow-y-auto">
                   <div className="space-y-1 py-2">
-                    {liveSignals.map((signal) => (
-                      <SignalRow
-                        key={`${signal.title}-${signal.timestamp}`}
-                        signal={signal}
-                      />
-                    ))}
+                    {liveSignalsData.length > 0 ? (
+                      liveSignalsData.map((signal) => (
+                        <SignalRow
+                          key={`${signal.title}-${signal.timestamp}`}
+                          signal={signal}
+                        />
+                      ))
+                    ) : (
+                      <p className="px-5 py-6 text-sm text-muted-foreground">
+                        No live events yet.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -133,7 +313,7 @@ export function DashboardPage() {
                   <p className="text-sm text-muted-foreground">Top lots</p>
                 </div>
                 <div className="space-y-3">
-                  {riceGrades.map((grade) => (
+                  {riceGradesData.map((grade) => (
                     <RiceRow
                       key={grade.name}
                       name={grade.name}
@@ -153,15 +333,21 @@ export function DashboardPage() {
                   <p className="text-sm text-muted-foreground">SLO 14.0%</p>
                 </div>
                 <div className="space-y-3">
-                  {moistureWatch.map((item) => (
-                    <MoistureRow
-                      key={item.site}
-                      site={item.site}
-                      moisture={item.moisture}
-                      delta={item.delta}
-                      severity={item.severity}
-                    />
-                  ))}
+                  {moistureWatchData.length > 0 ? (
+                    moistureWatchData.map((item) => (
+                      <MoistureRow
+                        key={item.site}
+                        site={item.site}
+                        moisture={item.moisture}
+                        delta={item.delta}
+                        severity={item.severity}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No moisture trend data available yet.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -222,106 +408,6 @@ type MoistureEntry = {
   delta: string
   severity: 'ok' | 'warn'
 }
-
-const liveSignals: LiveSignal[] = [
-  {
-    level: 'ok',
-    title: 'NE-01 heartbeat stable',
-    detail: 'CPU 41%, camera online, last ping 2s ago',
-    timestamp: 'just now',
-  },
-  {
-    level: 'warn',
-    title: 'IS-03 moisture above threshold',
-    detail: 'Latest batch reached 14.7% moisture',
-    timestamp: '8s ago',
-  },
-  {
-    level: 'info',
-    title: 'Start analysis queued',
-    detail: 'Operator queued batch PR-2026-0314 on BO-02',
-    timestamp: '16s ago',
-  },
-  {
-    level: 'info',
-    title: 'Model sync complete',
-    detail: 'YOLOv8 weights verified on edge-client v0.4.2',
-    timestamp: '24s ago',
-  },
-  {
-    level: 'warn',
-    title: 'Camera reconnect event',
-    detail: 'DV-05 recovered after USB camera timeout',
-    timestamp: '32s ago',
-  },
-  {
-    level: 'info',
-    title: 'Upload route switched',
-    detail: 'Fallback uploader engaged due to API latency spike',
-    timestamp: '40s ago',
-  },
-]
-
-const riceGrades: RiceGrade[] = [
-  {
-    name: 'Premium (PNS Grade 1)',
-    value: '1,284 samples',
-    share: 45,
-    status: 'positive',
-  },
-  {
-    name: 'Grade 2',
-    value: '917 samples',
-    share: 32,
-    status: 'positive',
-  },
-  {
-    name: 'Grade 3',
-    value: '412 samples',
-    share: 14,
-    status: 'positive',
-  },
-  {
-    name: 'High Broken / Recheck',
-    value: '178 samples',
-    share: 6,
-    status: 'negative',
-  },
-  { name: 'Rejected Lots', value: '56 samples', share: 3, status: 'negative' },
-]
-
-const moistureWatch: MoistureEntry[] = [
-  {
-    site: 'PhilRice CES - Drying Bay A',
-    moisture: '13.2%',
-    delta: '-0.3%',
-    severity: 'ok',
-  },
-  {
-    site: 'Isabela Satellite - Intake 2',
-    moisture: '14.5%',
-    delta: '+0.4%',
-    severity: 'warn',
-  },
-  {
-    site: 'Bohol Partner Mill - Lot 7',
-    moisture: '13.0%',
-    delta: '-0.1%',
-    severity: 'ok',
-  },
-  {
-    site: 'Iloilo Drying Complex - Line 2',
-    moisture: '15.1%',
-    delta: '+0.7%',
-    severity: 'warn',
-  },
-  {
-    site: 'Davao Storage Hub - Silo 4',
-    moisture: '13.5%',
-    delta: '-0.1%',
-    severity: 'ok',
-  },
-]
 
 type SignalRowProps = {
   signal: LiveSignal
@@ -418,6 +504,56 @@ function getSignalBadgeClass(level: SignalLevel) {
   }
 
   return 'border text-xs border-sky-300 bg-sky-500/10 text-sky-700 hover:bg-sky-500/10 px-1'
+}
+
+function mapApiDeviceToMapDevice(device: ApiDevice, index: number): Device {
+  const status =
+    device.status === 'offline'
+      ? 'inactive'
+      : device.status === 'maintenance'
+        ? 'scanning'
+        : 'active'
+
+  return {
+    id: device.id,
+    name: device.display_name,
+    group: 'Live Fleet',
+    status,
+    lastSeen: device.updated_at,
+    samplesProcessed: 45 + (seededNumber(device.id, 0, 360) % 360),
+    cpu: device.cpu_percent ?? 0,
+    latitude: seededCoordinate(device.id, 14.8, 16.1, index),
+    longitude: seededCoordinate(device.id, 120.4, 121.6, index + 2),
+    location: `Region ${device.region_id.slice(0, 8)}`,
+  }
+}
+
+function mapApiEventToLiveSignal(event: ApiDeviceEvent): LiveSignal {
+  const level: SignalLevel =
+    event.level === 'ERROR' ? 'warn' : event.level === 'WARN' ? 'warn' : 'info'
+
+  return {
+    level,
+    title: event.device_id ? `${event.device_id} event` : 'System event',
+    detail: event.message,
+    timestamp: new Date(event.created_at).toLocaleTimeString(),
+  }
+}
+
+function seededNumber(seed: string, min: number, max: number): number {
+  const hash = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return min + (hash % Math.max(max - min, 1))
+}
+
+function seededCoordinate(
+  seed: string,
+  min: number,
+  max: number,
+  offset = 0,
+): number {
+  const value = seededNumber(`${seed}-${offset}`, 0, 10_000)
+  const normalized = value / 10_000
+  return Number((min + (max - min) * normalized).toFixed(6))
 }
 
 function DashboardSidebarTrigger() {

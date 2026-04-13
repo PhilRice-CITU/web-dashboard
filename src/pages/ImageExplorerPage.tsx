@@ -10,6 +10,11 @@ import {
 } from 'lucide-react'
 
 import { PlatformShell } from '#/components/layout/PlatformShell'
+import type {
+  ApiDevice,
+  ApiResultImage,
+  ApiResultImagesListResponse,
+} from '#/api/contracts'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import {
@@ -29,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import { Input } from '#/components/ui/input'
-import { mockDevices } from '#/lib/mockData'
+import { useFetch } from '#/hooks/useApi'
 
 type ViewMode = 'xl' | 'lg' | 'md' | 'sm' | 'list'
 type ImageKind = 'raw' | 'ir' | 'processed'
@@ -52,47 +57,23 @@ type CapturedImage = {
 type SortOrder = 'newest' | 'oldest' | 'name-asc' | 'name-desc'
 const INITIAL_ALBUM_SELECTION: AlbumSelection = { type: 'albums' }
 
-const MOCK_IMAGE_FILES = [
-  'a9.jpg',
-  'c11.jpg',
-  'kylo_42_1767521917.jpg',
-  'kylo_42_1767537755.jpg',
-  'kylo_42_1767539393.jpg',
-  'mercy_48_1767541170.jpg',
-  'mercy_48_1767541231.jpg',
-  'mercy_48_1767541369.jpg',
-  'r2.jpg',
-  'rice_1767537655.jpg',
-  'rp1.jpg',
-]
-
-const MOCK_CAPTURED_IMAGES: CapturedImage[] = mockDevices.flatMap(
-  (device, deviceIndex) => {
-    const kindCycle: ImageKind[] = ['raw', 'ir', 'processed']
-
-    return Array.from({ length: 18 }, (_, imageIndex) => {
-      const kind = kindCycle[imageIndex % kindCycle.length]
-      const imageFile =
-        MOCK_IMAGE_FILES[(imageIndex + deviceIndex) % MOCK_IMAGE_FILES.length]
-      const capturedAt = new Date(
-        Date.now() - (deviceIndex * 18 + imageIndex) * 37 * 60 * 1000,
-      ).toISOString()
-
-      return {
-        id: `${device.id}-${imageIndex + 1}`,
-        fileName: imageFile,
-        imageUrl: `/mockimages/${imageFile}`,
-        deviceId: device.id,
-        deviceName: device.name,
-        kind,
-        capturedAt,
-        sizeKb: 420 + ((imageIndex * 61 + deviceIndex * 17) % 800),
-      }
-    })
-  },
-)
-
 export function ImageExplorerPage() {
+  const { data: devicesResponse } = useFetch<ApiDevice[]>({
+    url: '/devices',
+    retry: false,
+    refetchInterval: 30_000,
+  })
+
+  const {
+    data: imagesResponse,
+    error: imagesError,
+    refetch,
+  } = useFetch<ApiResultImagesListResponse>({
+    url: '/results/images?page=1&page_size=500&include_signed_url=true',
+    retry: false,
+    refetchInterval: 30_000,
+  })
+
   const [albumSelection, setAlbumSelection] = useState<AlbumSelection>(
     INITIAL_ALBUM_SELECTION,
   )
@@ -103,18 +84,37 @@ export function ImageExplorerPage() {
   const [searchText, setSearchText] = useState('')
   const [selectedImage, setSelectedImage] = useState<CapturedImage | null>(null)
 
+  const devices = useMemo(() => {
+    if (!devicesResponse || devicesResponse.length === 0) {
+      return []
+    }
+
+    return devicesResponse.map((device) => ({
+      id: device.id,
+      name: device.display_name,
+    }))
+  }, [devicesResponse])
+
+  const capturedImages = useMemo(() => {
+    if (!imagesResponse) {
+      return []
+    }
+
+    return imagesResponse.data.map(mapApiImageToCapturedImage)
+  }, [imagesResponse])
+
   const isAlbumPicker = albumSelection.type === 'albums'
   const albumTitle =
     albumSelection.type === 'all'
       ? 'All Images'
       : albumSelection.type === 'device'
-        ? (mockDevices.find((device) => device.id === albumSelection.deviceId)
+        ? (devices.find((device) => device.id === albumSelection.deviceId)
             ?.name ?? 'Device Images')
         : 'Albums'
 
   const albums = useMemo(() => {
-    const byDevice = mockDevices.map((device) => {
-      const images = MOCK_CAPTURED_IMAGES.filter(
+    const byDevice = devices.map((device) => {
+      const images = capturedImages.filter(
         (image) => image.deviceId === device.id,
       )
 
@@ -127,16 +127,16 @@ export function ImageExplorerPage() {
 
     return {
       all: {
-        count: MOCK_CAPTURED_IMAGES.length,
+        count: capturedImages.length,
       },
       byDevice,
     }
-  }, [])
+  }, [capturedImages, devices])
 
   const filteredImages = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase()
 
-    const scoped = MOCK_CAPTURED_IMAGES.filter((image) => {
+    const scoped = capturedImages.filter((image) => {
       if (
         albumSelection.type === 'device' &&
         image.deviceId !== albumSelection.deviceId
@@ -185,7 +185,7 @@ export function ImageExplorerPage() {
 
       return b.fileName.localeCompare(a.fileName)
     })
-  }, [albumSelection, kindFilter, searchText, sortOrder])
+  }, [albumSelection, capturedImages, kindFilter, searchText, sortOrder])
 
   const groupedImages = useMemo(() => {
     const map = new Map<string, CapturedImage[]>()
@@ -200,22 +200,27 @@ export function ImageExplorerPage() {
       }
     }
 
-    return mockDevices
+    return devices
       .map((device) => ({
         device,
         images: map.get(device.id) ?? [],
       }))
       .filter((entry) => entry.images.length > 0)
-  }, [filteredImages])
+  }, [devices, filteredImages])
 
   const canShowGrouped = groupByDevice && viewMode !== 'list'
 
   return (
     <PlatformShell
       title="Captured Images"
-      description="Mock file explorer for edge-captured images. Folder groups are visual only."
+      description="Browse captured edge images across devices and camera modes."
       actions={
-        <Button variant="ghost" size="sm" className="h-9">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9"
+          onClick={() => refetch()}
+        >
           <RefreshCcw className="mr-2 size-4" />
           Refresh
         </Button>
@@ -251,6 +256,11 @@ export function ImageExplorerPage() {
                 />
               ))}
             </div>
+            {imagesError ? (
+              <div className="px-4 pb-4 text-sm text-rose-700">
+                Failed to load images from API.
+              </div>
+            ) : null}
           </div>
         ) : (
           <>
@@ -589,7 +599,7 @@ function AlbumCard({
       className="group w-full text-left transition hover:-translate-y-0.5"
     >
       <article className="relative h-40 pt-4">
-        <div className="absolute left-0 top-4 bg-gray-50 h-5 w-52 rounded-t-lg border border-border border-b-none" />
+        <div className="absolute left-0 top-4 bg-gray-50 h-5 w-[calc(100%-2rem)] rounded-t-lg border border-border border-b-none" />
         <div className="absolute inset-x-0 top-6 bottom-0 rounded-xl  border border-border bg-card p-4 shadow-sm transition group-hover:border-primary/40 group-hover:shadow-md">
           <div className="flex h-full flex-col justify-between">
             <Badge variant="outline" className="w-fit bg-background/80">
@@ -649,4 +659,25 @@ function getPreviewHeightClass(viewMode: Exclude<ViewMode, 'list'>) {
   }
 
   return 'h-40'
+}
+
+function mapApiImageToCapturedImage(image: ApiResultImage): CapturedImage {
+  const normalizedKind = image.kind.toLowerCase()
+  const kind: ImageKind =
+    normalizedKind === 'raw'
+      ? 'raw'
+      : normalizedKind === 'ir'
+        ? 'ir'
+        : 'processed'
+
+  return {
+    id: image.id,
+    fileName: image.file_name,
+    imageUrl: image.signed_url ?? image.storage_url,
+    deviceId: image.device_id,
+    deviceName: image.device_name ?? image.device_id,
+    kind,
+    capturedAt: image.captured_at,
+    sizeKb: 512,
+  }
 }

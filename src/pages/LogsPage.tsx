@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
   Download,
@@ -9,6 +9,10 @@ import {
 } from 'lucide-react'
 
 import { PlatformShell } from '#/components/layout/PlatformShell'
+import type {
+  ApiDeviceEvent,
+  ApiDeviceEventsListResponse,
+} from '#/api/contracts'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import {
@@ -19,6 +23,8 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
+import { useFetch } from '#/hooks/useApi'
+import { supabase } from '#/lib/supabase'
 import {
   Sheet,
   SheetContent,
@@ -30,6 +36,13 @@ import {
 } from '#/components/ui/sheet'
 
 type EventLevel = 'INFO' | 'WARN' | 'ERROR'
+type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
+const MAX_RECONNECT_ATTEMPTS = 10
+const MAX_BACKOFF_MS = 30_000
+
+function getBackoffDelay(attempt: number): number {
+  return Math.min(500 * 2 ** Math.max(attempt - 1, 0), MAX_BACKOFF_MS)
+}
 
 interface LogEvent {
   time: string
@@ -38,149 +51,133 @@ interface LogEvent {
   message: string
 }
 
-const mockEvents: LogEvent[] = [
-  {
-    time: '10:41:12',
-    device: 'IS-03',
-    level: 'WARN',
-    message: 'Moisture threshold exceeded (14.7%)',
-  },
-  {
-    time: '10:39:58',
-    device: 'NE-01',
-    level: 'INFO',
-    message: 'Heartbeat received, queue depth 0',
-  },
-  {
-    time: '10:38:21',
-    device: 'DV-05',
-    level: 'ERROR',
-    message: 'Camera timeout during capture stage',
-  },
-  {
-    time: '10:37:42',
-    device: 'BO-02',
-    level: 'INFO',
-    message: 'Upload complete for batch PR-2026-314',
-  },
-  {
-    time: '10:36:30',
-    device: 'IS-03',
-    level: 'INFO',
-    message: 'LED profile switched to blue-enhanced mode',
-  },
-  {
-    time: '10:35:56',
-    device: 'NE-01',
-    level: 'INFO',
-    message: 'Capture queue flushed after successful retry',
-  },
-  {
-    time: '10:35:11',
-    device: 'DV-05',
-    level: 'WARN',
-    message: 'Camera reconnect succeeded on second attempt',
-  },
-  {
-    time: '10:34:48',
-    device: 'BO-02',
-    level: 'INFO',
-    message: 'Analysis started for lot PR-2026-315',
-  },
-  {
-    time: '10:33:54',
-    device: 'IS-03',
-    level: 'WARN',
-    message: 'Upload latency above 4s threshold',
-  },
-  {
-    time: '10:33:09',
-    device: 'NE-01',
-    level: 'INFO',
-    message: 'Heartbeat received, queue depth 1',
-  },
-  {
-    time: '10:32:41',
-    device: 'DV-05',
-    level: 'INFO',
-    message: 'Storage cleanup removed 12 old temp files',
-  },
-  {
-    time: '10:31:55',
-    device: 'BO-02',
-    level: 'WARN',
-    message: 'Moisture trend rising for intake lane B',
-  },
-  {
-    time: '10:31:20',
-    device: 'IS-03',
-    level: 'INFO',
-    message: 'Model checksum verified (edge-client v0.4.2)',
-  },
-  {
-    time: '10:30:58',
-    device: 'NE-01',
-    level: 'INFO',
-    message: 'Camera calibration profile loaded',
-  },
-  {
-    time: '10:30:14',
-    device: 'DV-05',
-    level: 'ERROR',
-    message: 'Capture aborted due to invalid frame sync',
-  },
-  {
-    time: '10:29:48',
-    device: 'BO-02',
-    level: 'INFO',
-    message: 'Upload route switched to backup endpoint',
-  },
-  {
-    time: '10:29:02',
-    device: 'IS-03',
-    level: 'INFO',
-    message: 'Queue depth returned to zero',
-  },
-  {
-    time: '10:28:26',
-    device: 'NE-01',
-    level: 'WARN',
-    message: 'CPU temperature approaching threshold (74C)',
-  },
-  {
-    time: '10:27:39',
-    device: 'DV-05',
-    level: 'INFO',
-    message: 'Camera warmup complete; ready for trigger',
-  },
-  {
-    time: '10:27:01',
-    device: 'BO-02',
-    level: 'INFO',
-    message: 'Batch metadata synced to API server',
-  },
-]
-
 export function LogsPage() {
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
   const [expandedTerminalDevice, setExpandedTerminalDevice] = useState<
     string | null
   >(null)
+  const [socketStatus, setSocketStatus] = useState<SocketStatus>('disconnected')
+  const [reconnectCount, setReconnectCount] = useState(0)
+
+  const {
+    data: eventsResponse,
+    isLoading: isEventsLoading,
+    error: eventsError,
+    refetch,
+  } = useFetch<ApiDeviceEventsListResponse>({
+    url: '/device-events?page=1&page_size=200',
+    retry: false,
+    refetchInterval: 15_000,
+  })
+
+  const [liveEvents, setLiveEvents] = useState<LogEvent[]>([])
+
+  useEffect(() => {
+    if (!eventsResponse) {
+      return
+    }
+
+    setLiveEvents(eventsResponse.data.map(mapApiEventToLogEvent))
+  }, [eventsResponse])
+
+  useEffect(() => {
+    let socket: WebSocket | null = null
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+    let cancelled = false
+    let reconnectAttempts = 0
+
+    async function connect() {
+      setSocketStatus('connecting')
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        setSocketStatus('error')
+        return
+      }
+
+      const apiBase =
+        import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+      const websocketBase = apiBase.replace(/^http/, 'ws')
+      socket = new WebSocket(
+        `${websocketBase}/device-events/ws?token=${encodeURIComponent(session.access_token)}`,
+      )
+
+      socket.onopen = () => {
+        setSocketStatus('connected')
+        reconnectAttempts = 0
+        setReconnectCount(0)
+      }
+
+      socket.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data) as {
+            type?: string
+            event?: ApiDeviceEvent
+          }
+
+          if (parsed.type !== 'device-event' || !parsed.event) {
+            return
+          }
+
+          const mapped = mapApiEventToLogEvent(parsed.event)
+          setLiveEvents((current) => [mapped, ...current].slice(0, 250))
+        } catch {
+          // Ignore malformed websocket payloads.
+        }
+      }
+
+      socket.onerror = () => {
+        setSocketStatus('error')
+      }
+
+      socket.onclose = () => {
+        if (cancelled) {
+          return
+        }
+
+        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+          setSocketStatus('error')
+          return
+        }
+
+        setSocketStatus('disconnected')
+        const nextAttempt = reconnectAttempts + 1
+        reconnectAttempts = nextAttempt
+        const delayMs = getBackoffDelay(nextAttempt)
+        setReconnectCount(nextAttempt)
+        reconnectTimer = setTimeout(() => {
+          void connect()
+        }, delayMs)
+      }
+    }
+
+    void connect()
+
+    return () => {
+      cancelled = true
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer)
+      }
+      socket?.close()
+    }
+  }, [])
 
   const filteredEvents = useMemo(() => {
     const query = search.trim().toLowerCase()
 
     if (!query) {
-      return mockEvents
+      return liveEvents
     }
 
-    return mockEvents.filter((event) =>
+    return liveEvents.filter((event) =>
       `${event.device} ${event.level} ${event.message} ${event.time}`
         .toLowerCase()
         .includes(query),
     )
-  }, [search])
+  }, [liveEvents, search])
 
   const deviceGroups = useMemo(() => {
     const grouped = filteredEvents.reduce<Record<string, LogEvent[]>>(
@@ -243,6 +240,15 @@ export function LogsPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Near real-time events from edge devices and backend services.
           </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Stream: {socketStatus}
+          </p>
+          {socketStatus === 'error' ? (
+            <p className="mt-1 text-xs text-rose-700">
+              Live stream unavailable after {MAX_RECONNECT_ATTEMPTS} reconnect
+              attempts.
+            </p>
+          ) : null}
         </div>
 
         <div className="p-4 md:p-5">
@@ -253,7 +259,12 @@ export function LogsPage() {
               placeholder="Search by device, level, or message..."
               className="min-w-56 flex-1"
             />
-            <Button variant="outline" size="sm" className="h-8.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8.5"
+              onClick={() => refetch()}
+            >
               <Search className="mr-2 size-4" />
               Search
             </Button>
@@ -278,6 +289,18 @@ export function LogsPage() {
               </Button>
             </div>
           </div>
+
+          {eventsError ? (
+            <div className="mb-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              Failed to load events from API.
+            </div>
+          ) : null}
+
+          {isEventsLoading ? (
+            <div className="mb-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
+              Loading event stream...
+            </div>
+          ) : null}
 
           {viewMode === 'list' ? (
             <div className="space-y-2">
@@ -371,6 +394,15 @@ export function LogsPage() {
       </section>
     </PlatformShell>
   )
+}
+
+function mapApiEventToLogEvent(event: ApiDeviceEvent): LogEvent {
+  return {
+    time: new Date(event.created_at).toLocaleTimeString(),
+    device: event.device_id ?? 'SYSTEM',
+    level: event.level,
+    message: event.message,
+  }
 }
 
 function getLevelBadgeClassName(level: EventLevel) {

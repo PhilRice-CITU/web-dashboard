@@ -1,6 +1,12 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Link,
+  Scripts,
+  createRootRoute,
+} from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { Button } from '#/components/ui/button'
 import { QueryProvider } from '#/providers/QueryProvider'
 import { AuthProvider } from '#/providers/AuthProvider'
 import appCss from '../styles.css?url'
@@ -50,8 +56,33 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  notFoundComponent: RootNotFound,
   shellComponent: RootDocument,
 })
+
+function RootNotFound() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-6">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center">
+        <p className="text-xs font-semibold tracking-wide text-muted-foreground">
+          404
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold text-foreground">
+          Page not found
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          The page you are looking for does not exist or may have been moved.
+        </p>
+        <div className="mt-5 flex items-center justify-center gap-2">
+          <Button render={<Link to="/dashboard" />}>Go to Dashboard</Button>
+          <Button variant="outline" render={<Link to="/devices" />}>
+            Open Devices
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (

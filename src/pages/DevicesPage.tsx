@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Camera,
   ChevronsRight,
@@ -32,7 +33,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '#/components/ui/sheet'
-import { mockDevices } from '#/lib/mockData'
+import { httpClient } from '#/api/client'
+import type { ApiDevice, ApiDeviceCommand } from '#/api/contracts'
+import { useFetch } from '#/hooks/useApi'
 
 type DeviceAction =
   | 'capture'
@@ -41,25 +44,151 @@ type DeviceAction =
   | 'shutdown-device'
   | 'view-device'
 
+type FleetDevice = {
+  id: string
+  name: string
+  group?: string
+  status: 'inactive' | 'scanning' | 'active'
+  lastSeen: string
+  samplesProcessed: number
+  cpuPercent: number | null
+  memoryPercent: number | null
+  storagePercent: number | null
+  temperatureCelsius: number | null
+  queueDepth: number | null
+  latitude: number
+  longitude: number
+  location: string
+}
+
 export function DevicesPage() {
+  const queryClient = useQueryClient()
   const [addDeviceOpen, setAddDeviceOpen] = useState(false)
   const [commandOpen, setCommandOpen] = useState(false)
-  const [selectedDeviceId, setSelectedDeviceId] = useState(
-    mockDevices[0]?.id ?? '',
-  )
+  const [selectedDeviceId, setSelectedDeviceId] = useState('')
+  const [newDeviceCode, setNewDeviceCode] = useState('')
+  const [newDeviceName, setNewDeviceName] = useState('')
+  const [newDeviceLocation, setNewDeviceLocation] = useState('')
+  const [newDeviceIp, setNewDeviceIp] = useState('')
+  const [queuedCommandName, setQueuedCommandName] = useState('restart-app')
   const [actionState, setActionState] = useState<Record<string, string>>({})
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false)
 
+  const {
+    data: deviceRows,
+    isLoading: isDevicesLoading,
+    error: devicesError,
+  } = useFetch<ApiDevice[]>({
+    url: '/devices',
+    retry: false,
+    refetchInterval: 30_000,
+  })
+
+  const devices = useMemo<FleetDevice[]>(() => {
+    return (deviceRows ?? []).map((device, index) =>
+      mapApiDeviceToFleetDevice(device, index),
+    )
+  }, [deviceRows])
+
+  useEffect(() => {
+    if (!selectedDeviceId && devices.length > 0) {
+      setSelectedDeviceId(devices[0].id)
+      return
+    }
+
+    if (
+      selectedDeviceId &&
+      devices.length > 0 &&
+      !devices.some((device) => device.id === selectedDeviceId)
+    ) {
+      setSelectedDeviceId(devices[0].id)
+    }
+  }, [devices, selectedDeviceId])
+
   const selectedDevice =
-    mockDevices.find((device) => device.id === selectedDeviceId) ??
-    mockDevices[0]
+    devices.find((device) => device.id === selectedDeviceId) ?? devices[0]
+
+  const { data: commandHistory = [] } = useFetch<ApiDeviceCommand[]>({
+    url: selectedDevice
+      ? `/devices/${selectedDevice.id}/commands?limit=20`
+      : '/devices/placeholder/commands?limit=20',
+    enabled: Boolean(selectedDevice),
+    retry: false,
+    refetchInterval: 10_000,
+  })
+
+  const createDeviceMutation = useMutation({
+    mutationFn: async (payload: { display_name: string }) => {
+      const response = await httpClient.post<ApiDevice>('/devices', payload)
+      return response.data
+    },
+    onSuccess: (createdDevice) => {
+      queryClient.invalidateQueries({ queryKey: ['/devices'] })
+      setAddDeviceOpen(false)
+      setActionState((current) => ({
+        ...current,
+        [createdDevice.id]: `Device registered • ${new Date().toLocaleTimeString()}`,
+      }))
+      setNewDeviceCode('')
+      setNewDeviceName('')
+      setNewDeviceLocation('')
+      setNewDeviceIp('')
+    },
+  })
+
+  const commandMutation = useMutation({
+    mutationFn: async (payload: { deviceId: string; command: string }) => {
+      const response = await httpClient.post<ApiDeviceCommand>(
+        `/devices/${payload.deviceId}/command`,
+        {
+          command: payload.command,
+          args: {
+            source: 'web-dashboard',
+          },
+        },
+      )
+      return response.data
+    },
+  })
 
   const telemetry = useMemo(
     () => getDeviceTelemetry(selectedDevice),
     [selectedDevice],
   )
 
+  const latestCommand = commandHistory[0]
+
+  const queueCommand = (deviceId: string, command: string) => {
+    commandMutation.mutate(
+      { deviceId, command },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: [`/devices/${deviceId}/commands?limit=20`],
+          })
+          setActionState((current) => ({
+            ...current,
+            [deviceId]: `Command queued (${command}) • ${new Date().toLocaleTimeString()}`,
+          }))
+        },
+        onError: (error) => {
+          const message =
+            (error as { response?: { data?: { detail?: string } } }).response
+              ?.data?.detail ?? 'Failed to queue command'
+          setActionState((current) => ({
+            ...current,
+            [deviceId]: `${message} • ${new Date().toLocaleTimeString()}`,
+          }))
+        },
+      },
+    )
+  }
+
   const runDeviceAction = (action: DeviceAction) => {
+    if (!selectedDevice) {
+      return
+    }
+
     const actionLabel: Record<DeviceAction, string> = {
       capture: 'Photo capture requested',
       'restart-app': 'Application restart command sent',
@@ -68,10 +197,35 @@ export function DevicesPage() {
       'view-device': 'Viewing device telemetry and controls',
     }
 
+    if (action !== 'view-device') {
+      queueCommand(selectedDevice.id, action)
+      return
+    }
+
     setActionState((current) => ({
       ...current,
       [selectedDevice.id]: `${actionLabel[action]} • ${new Date().toLocaleTimeString()}`,
     }))
+  }
+
+  const handleSaveDevice = () => {
+    const displayName =
+      newDeviceName.trim() ||
+      newDeviceCode.trim() ||
+      `Edge Device ${Date.now()}`
+
+    createDeviceMutation.mutate({
+      display_name: displayName,
+    })
+  }
+
+  const handleQueueModalCommand = () => {
+    if (!selectedDevice) {
+      return
+    }
+
+    queueCommand(selectedDevice.id, normalizeCommand(queuedCommandName))
+    setCommandOpen(false)
   }
 
   return (
@@ -100,6 +254,8 @@ export function DevicesPage() {
                   <Input
                     id="device-target"
                     placeholder="NE-01 or Group: Isabela"
+                    value={selectedDevice?.id ?? ''}
+                    readOnly
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -107,11 +263,18 @@ export function DevicesPage() {
                   <Input
                     id="command-name"
                     placeholder="restart_capture_service"
+                    value={queuedCommandName}
+                    onChange={(event) =>
+                      setQueuedCommandName(event.target.value)
+                    }
                   />
                 </div>
               </div>
               <SheetFooter>
-                <Button onClick={() => setCommandOpen(false)}>
+                <Button
+                  onClick={handleQueueModalCommand}
+                  disabled={!selectedDevice || commandMutation.isPending}
+                >
                   Queue Command
                 </Button>
               </SheetFooter>
@@ -136,23 +299,48 @@ export function DevicesPage() {
               <div className="space-y-4 p-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="device-id">Device ID</Label>
-                  <Input id="device-id" placeholder="NE-04" />
+                  <Input
+                    id="device-id"
+                    placeholder="NE-04"
+                    value={newDeviceCode}
+                    onChange={(event) => setNewDeviceCode(event.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="device-name">Display name</Label>
-                  <Input id="device-name" placeholder="Nueva Ecija - Lab 4" />
+                  <Input
+                    id="device-name"
+                    placeholder="Nueva Ecija - Lab 4"
+                    value={newDeviceName}
+                    onChange={(event) => setNewDeviceName(event.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="device-location">Location</Label>
-                  <Input id="device-location" placeholder="PhilRice CES" />
+                  <Input
+                    id="device-location"
+                    placeholder="PhilRice CES"
+                    value={newDeviceLocation}
+                    onChange={(event) =>
+                      setNewDeviceLocation(event.target.value)
+                    }
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="device-ip">IP / Host</Label>
-                  <Input id="device-ip" placeholder="100.102.22.4" />
+                  <Input
+                    id="device-ip"
+                    placeholder="100.102.22.4"
+                    value={newDeviceIp}
+                    onChange={(event) => setNewDeviceIp(event.target.value)}
+                  />
                 </div>
               </div>
               <SheetFooter>
-                <Button onClick={() => setAddDeviceOpen(false)}>
+                <Button
+                  onClick={handleSaveDevice}
+                  disabled={createDeviceMutation.isPending}
+                >
                   Save Device
                 </Button>
               </SheetFooter>
@@ -163,19 +351,18 @@ export function DevicesPage() {
     >
       <section className="overflow-hidden border-b border-border">
         <div className="grid grid-cols-1 md:grid-cols-3">
-          <MetricCard
-            label="Total Devices"
-            value={String(mockDevices.length)}
-          />
+          <MetricCard label="Total Devices" value={String(devices.length)} />
           <MetricCard
             label="Online"
             value={String(
-              mockDevices.filter((item) => item.status !== 'inactive').length,
+              devices.filter((item) => item.status !== 'inactive').length,
             )}
           />
           <MetricCard
             label="In Maintenance"
-            value={String(mockDevices.filter((item) => item.cpu > 80).length)}
+            value={String(
+              devices.filter((item) => item.status === 'scanning').length,
+            )}
           />
         </div>
 
@@ -197,6 +384,19 @@ export function DevicesPage() {
             </div>
 
             <div className="divide-y divide-border">
+              {!isDevicesLoading && devicesError ? (
+                <div className="px-4 py-3 text-sm text-rose-700">
+                  Failed to load devices from API.
+                </div>
+              ) : null}
+
+              {!isDevicesLoading && !devicesError && devices.length === 0 ? (
+                <div className="px-4 py-4 text-sm text-muted-foreground">
+                  No device connected yet. Add a device to start receiving
+                  telemetry and commands.
+                </div>
+              ) : null}
+
               {isRightPanelCollapsed ? (
                 <div className="grid grid-cols-[2.1fr_1.2fr_repeat(7,minmax(0,1fr))_auto] gap-2 border-b border-border bg-muted/40 px-4 py-2 text-[11px] font-medium tracking-wide text-muted-foreground md:px-5">
                   <span>DEVICE</span>
@@ -212,7 +412,7 @@ export function DevicesPage() {
                 </div>
               ) : null}
 
-              {mockDevices.map((device) => {
+              {devices.map((device) => {
                 const rowTelemetry = getDeviceTelemetry(device)
 
                 return (
@@ -238,7 +438,7 @@ export function DevicesPage() {
                     role="button"
                     tabIndex={0}
                     className={`w-full px-4 py-3 text-left transition hover:bg-muted/50 md:px-5 ${
-                      selectedDevice.id === device.id
+                      selectedDevice?.id === device.id
                         ? 'bg-muted/70'
                         : 'bg-background'
                     }`}
@@ -280,13 +480,21 @@ export function DevicesPage() {
                               {device.status}
                             </Badge>
                           </span>
-                          <span>{device.cpu}%</span>
-                          <span>{rowTelemetry.temperature.toFixed(1)}C</span>
-                          <span>{rowTelemetry.memory}%</span>
-                          <span>{rowTelemetry.storage}%</span>
-                          <span>{rowTelemetry.queueDepth}</span>
+                          <span>{formatPercent(device.cpuPercent)}</span>
+                          <span>
+                            {formatTemperature(rowTelemetry.temperatureCelsius)}
+                          </span>
+                          <span>
+                            {formatPercent(rowTelemetry.memoryPercent)}
+                          </span>
+                          <span>
+                            {formatPercent(rowTelemetry.storagePercent)}
+                          </span>
+                          <span>{formatInteger(rowTelemetry.queueDepth)}</span>
                           <span>{rowTelemetry.cameraStatus}</span>
-                          <span>{rowTelemetry.networkLatencyMs}ms</span>
+                          <span>
+                            {formatLatency(rowTelemetry.networkLatencyMs)}
+                          </span>
                           <span>
                             <Button
                               type="button"
@@ -309,7 +517,7 @@ export function DevicesPage() {
                         </div>
                       ) : (
                         <div className="flex flex-wrap items-center gap-4">
-                          <span>CPU: {device.cpu}%</span>
+                          <span>CPU: {formatPercent(device.cpuPercent)}</span>
                           <span>Processed: {device.samplesProcessed}</span>
                           <span>
                             Last seen:{' '}
@@ -330,19 +538,21 @@ export function DevicesPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
                   <div>
                     <h3 className="text-base font-semibold">
-                      {selectedDevice.name}
+                      {selectedDevice?.name ?? 'No device selected'}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {selectedDevice.id} •{' '}
-                      {selectedDevice.group ?? 'Ungrouped'} •{' '}
-                      {selectedDevice.location}
+                      {selectedDevice?.id ?? 'N/A'} •{' '}
+                      {selectedDevice?.group ?? 'Ungrouped'} •{' '}
+                      {selectedDevice?.location ?? 'Unknown'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge
-                      className={getStatusBadgeClass(selectedDevice.status)}
+                      className={getStatusBadgeClass(
+                        selectedDevice?.status ?? 'inactive',
+                      )}
                     >
-                      {selectedDevice.status}
+                      {selectedDevice?.status ?? 'inactive'}
                     </Badge>
                     <Button
                       variant="outline"
@@ -356,23 +566,26 @@ export function DevicesPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 px-4">
-                  <TelemetryTile label="CPU" value={`${selectedDevice.cpu}%`} />
+                  <TelemetryTile
+                    label="CPU"
+                    value={formatPercent(telemetry.cpuPercent)}
+                  />
                   <TelemetryTile
                     label="Memory"
-                    value={`${telemetry.memory}%`}
+                    value={formatPercent(telemetry.memoryPercent)}
                   />
                   <TelemetryTile
                     label="Storage"
-                    value={`${telemetry.storage}%`}
+                    value={formatPercent(telemetry.storagePercent)}
                   />
                   <TelemetryTile
                     label="Temperature"
-                    value={`${telemetry.temperature.toFixed(1)} C`}
+                    value={formatTemperature(telemetry.temperatureCelsius)}
                     icon={<Thermometer className="size-3.5" />}
                   />
                   <TelemetryTile
                     label="Queue Depth"
-                    value={String(telemetry.queueDepth)}
+                    value={formatInteger(telemetry.queueDepth)}
                   />
                   <TelemetryTile
                     label="Camera"
@@ -400,8 +613,8 @@ export function DevicesPage() {
                       <div className="relative h-64 overflow-hidden rounded-md border border-border bg-[radial-gradient(circle_at_top,#1f2937,#020617_65%)]">
                         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(255,255,255,0.08)_50%,transparent_100%)] animate-pulse" />
                         <div className="absolute bottom-2 left-2 rounded bg-black/65 px-2 py-1 text-xs text-slate-100">
-                          LIVE • {selectedDevice.id} •{' '}
-                          {telemetry.networkLatencyMs}ms
+                          LIVE • {selectedDevice?.id ?? 'N/A'} •{' '}
+                          {formatLatency(telemetry.networkLatencyMs)}
                         </div>
                       </div>
 
@@ -438,7 +651,7 @@ export function DevicesPage() {
                       </div>
 
                       <p className="text-xs text-muted-foreground">
-                        {actionState[selectedDevice.id] ??
+                        {actionState[selectedDevice?.id ?? ''] ??
                           'No control action sent yet.'}
                       </p>
                     </CardContent>
@@ -453,15 +666,24 @@ export function DevicesPage() {
                     <CardContent className="space-y-1 text-sm text-muted-foreground">
                       <p>
                         Last heartbeat:{' '}
-                        {new Date(selectedDevice.lastSeen).toLocaleString()}
+                        {selectedDevice
+                          ? new Date(selectedDevice.lastSeen).toLocaleString()
+                          : 'N/A'}
                       </p>
                       <p>
-                        Approx network latency: {telemetry.networkLatencyMs}ms
+                        Approx network latency:{' '}
+                        {formatLatency(telemetry.networkLatencyMs)}
                       </p>
                       <p>
                         Total samples processed:{' '}
-                        {selectedDevice.samplesProcessed}
+                        {selectedDevice?.samplesProcessed ?? 0}
                       </p>
+                      {latestCommand ? (
+                        <p>
+                          Latest command: {latestCommand.command} (
+                          {latestCommand.status})
+                        </p>
+                      ) : null}
                     </CardContent>
                   </div>
                 </div>
@@ -474,25 +696,28 @@ export function DevicesPage() {
   )
 }
 
-function getDeviceTelemetry(device: (typeof mockDevices)[number]) {
-  const memory = Math.min(91, Math.max(24, device.cpu + 9))
-  const storage = Math.min(
-    89,
-    Math.max(32, 42 + (device.samplesProcessed % 33)),
-  )
-  const temperature = Math.min(79, Math.max(34, 35 + device.cpu * 0.55))
-  const queueDepth =
-    device.status === 'inactive' ? 0 : 1 + (device.samplesProcessed % 7)
+function getDeviceTelemetry(device: FleetDevice | undefined) {
+  if (!device) {
+    return {
+      cpuPercent: null,
+      memoryPercent: null,
+      storagePercent: null,
+      temperatureCelsius: null,
+      queueDepth: null,
+      cameraStatus: 'offline',
+      networkLatencyMs: null,
+    }
+  }
   const cameraStatus = device.status === 'inactive' ? 'offline' : 'online'
 
   return {
-    memory,
-    storage,
-    temperature,
-    queueDepth,
+    cpuPercent: device.cpuPercent,
+    memoryPercent: device.memoryPercent,
+    storagePercent: device.storagePercent,
+    temperatureCelsius: device.temperatureCelsius,
+    queueDepth: device.queueDepth,
     cameraStatus,
-    networkLatencyMs:
-      device.status === 'inactive' ? 0 : 42 + (device.samplesProcessed % 34),
+    networkLatencyMs: null,
   }
 }
 
@@ -517,6 +742,91 @@ function getStatusBadgeClass(status: 'inactive' | 'scanning' | 'active') {
   }
 
   return 'bg-slate-500/15 text-slate-700'
+}
+
+function normalizeCommand(value: string): string {
+  const command = value.trim().toLowerCase()
+  if (
+    command === 'capture' ||
+    command === 'restart-app' ||
+    command === 'restart-device' ||
+    command === 'shutdown-device'
+  ) {
+    return command
+  }
+
+  return 'restart-app'
+}
+
+function mapApiDeviceToFleetDevice(
+  device: ApiDevice,
+  index: number,
+): FleetDevice {
+  return {
+    id: device.id,
+    name: device.display_name,
+    group: 'Live Fleet',
+    status:
+      device.status === 'offline'
+        ? 'inactive'
+        : device.status === 'maintenance'
+          ? 'scanning'
+          : 'active',
+    lastSeen: device.updated_at,
+    samplesProcessed: 30 + seededNumber(device.id, 0, 540),
+    cpuPercent: device.cpu_percent,
+    memoryPercent: device.memory_percent,
+    storagePercent: device.storage_percent,
+    temperatureCelsius: device.temperature_celsius,
+    queueDepth: device.queue_depth,
+    latitude: seededCoordinate(device.id, 14.8, 16.1, index),
+    longitude: seededCoordinate(device.id, 120.4, 121.6, index + 4),
+    location: `Region ${device.region_id.slice(0, 8)}`,
+  }
+}
+
+function formatPercent(value: number | null): string {
+  if (value === null || value === undefined) {
+    return 'N/A'
+  }
+  return `${value.toFixed(1)}%`
+}
+
+function formatTemperature(value: number | null): string {
+  if (value === null || value === undefined) {
+    return 'N/A'
+  }
+  return `${value.toFixed(1)} C`
+}
+
+function formatInteger(value: number | null): string {
+  if (value === null || value === undefined) {
+    return 'N/A'
+  }
+  return String(value)
+}
+
+function formatLatency(value: number | null): string {
+  if (value === null || value === undefined) {
+    return 'N/A'
+  }
+  return `${value}ms`
+}
+
+function seededNumber(seed: string, min: number, max: number): number {
+  const hash = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return min + (hash % Math.max(max - min + 1, 1))
+}
+
+function seededCoordinate(
+  seed: string,
+  min: number,
+  max: number,
+  offset = 0,
+): number {
+  const value = seededNumber(`${seed}-${offset}`, 0, 10_000)
+  const normalized = value / 10_000
+  return Number((min + (max - min) * normalized).toFixed(6))
 }
 
 function TelemetryTile({
