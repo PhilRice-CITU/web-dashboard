@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Camera,
   ChevronsRight,
+  Copy,
+  KeyRound,
   Plus,
   Power,
   RefreshCw,
@@ -69,10 +71,15 @@ export function DevicesPage() {
   const [newDeviceCode, setNewDeviceCode] = useState('')
   const [newDeviceName, setNewDeviceName] = useState('')
   const [newDeviceLocation, setNewDeviceLocation] = useState('')
-  const [newDeviceIp, setNewDeviceIp] = useState('')
   const [queuedCommandName, setQueuedCommandName] = useState('restart-app')
   const [actionState, setActionState] = useState<Record<string, string>>({})
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false)
+  const [rotatedCredential, setRotatedCredential] = useState<{
+    deviceId: string
+    secret: string
+    rotatedAt: string
+  } | null>(null)
+  const [credentialCopyState, setCredentialCopyState] = useState('')
 
   const {
     data: deviceRows,
@@ -105,8 +112,9 @@ export function DevicesPage() {
     }
   }, [devices, selectedDeviceId])
 
-  const selectedDevice =
-    devices.find((device) => device.id === selectedDeviceId) ?? devices[0]
+  const selectedDevice = devices.find(
+    (device) => device.id === selectedDeviceId,
+  )
 
   const { data: commandHistory = [] } = useFetch<ApiDeviceCommand[]>({
     url: selectedDevice
@@ -118,7 +126,10 @@ export function DevicesPage() {
   })
 
   const createDeviceMutation = useMutation({
-    mutationFn: async (payload: { display_name: string }) => {
+    mutationFn: async (payload: {
+      display_name: string
+      device_id?: string
+    }) => {
       const response = await httpClient.post<ApiDevice>('/devices', payload)
       return response.data
     },
@@ -132,7 +143,17 @@ export function DevicesPage() {
       setNewDeviceCode('')
       setNewDeviceName('')
       setNewDeviceLocation('')
-      setNewDeviceIp('')
+    },
+  })
+
+  const rotateCredentialMutation = useMutation({
+    mutationFn: async (deviceId: string) => {
+      const response = await httpClient.post<{
+        device_id: string
+        device_secret: string
+        rotated_at: string
+      }>(`/devices/${deviceId}/credential/rotate`)
+      return response.data
     },
   })
 
@@ -156,7 +177,7 @@ export function DevicesPage() {
     [selectedDevice],
   )
 
-  const latestCommand = commandHistory[0]
+  const latestCommand = commandHistory.at(0)
 
   const queueCommand = (deviceId: string, command: string) => {
     commandMutation.mutate(
@@ -213,9 +234,11 @@ export function DevicesPage() {
       newDeviceName.trim() ||
       newDeviceCode.trim() ||
       `Edge Device ${Date.now()}`
+    const deviceId = newDeviceCode.trim()
 
     createDeviceMutation.mutate({
       display_name: displayName,
+      ...(deviceId ? { device_id: deviceId } : {}),
     })
   }
 
@@ -226,6 +249,49 @@ export function DevicesPage() {
 
     queueCommand(selectedDevice.id, normalizeCommand(queuedCommandName))
     setCommandOpen(false)
+  }
+
+  const handleRotateCredential = () => {
+    if (!selectedDevice) {
+      return
+    }
+
+    rotateCredentialMutation.mutate(selectedDevice.id, {
+      onSuccess: (result) => {
+        setRotatedCredential({
+          deviceId: result.device_id,
+          secret: result.device_secret,
+          rotatedAt: result.rotated_at,
+        })
+        setCredentialCopyState('')
+        setActionState((current) => ({
+          ...current,
+          [selectedDevice.id]: `Credential rotated • ${new Date().toLocaleTimeString()}`,
+        }))
+      },
+      onError: (error) => {
+        const message =
+          (error as { response?: { data?: { detail?: string } } }).response
+            ?.data?.detail ?? 'Failed to rotate credential'
+        setActionState((current) => ({
+          ...current,
+          [selectedDevice.id]: `${message} • ${new Date().toLocaleTimeString()}`,
+        }))
+      },
+    })
+  }
+
+  const handleCopyCredential = async () => {
+    if (!rotatedCredential?.secret) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(rotatedCredential.secret)
+      setCredentialCopyState('Copied')
+    } catch {
+      setCredentialCopyState('Copy failed')
+    }
   }
 
   return (
@@ -301,7 +367,7 @@ export function DevicesPage() {
                   <Label htmlFor="device-id">Device ID</Label>
                   <Input
                     id="device-id"
-                    placeholder="NE-04"
+                    placeholder="UUID "
                     value={newDeviceCode}
                     onChange={(event) => setNewDeviceCode(event.target.value)}
                   />
@@ -324,15 +390,6 @@ export function DevicesPage() {
                     onChange={(event) =>
                       setNewDeviceLocation(event.target.value)
                     }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="device-ip">IP / Host</Label>
-                  <Input
-                    id="device-ip"
-                    placeholder="100.102.22.4"
-                    value={newDeviceIp}
-                    onChange={(event) => setNewDeviceIp(event.target.value)}
                   />
                 </div>
               </div>
@@ -648,7 +705,50 @@ export function DevicesPage() {
                           <Power className="mr-2 size-4" />
                           Turn Off Device
                         </Button>
+                        <Button
+                          variant="outline"
+                          onClick={handleRotateCredential}
+                          disabled={
+                            !selectedDevice ||
+                            rotateCredentialMutation.isPending
+                          }
+                        >
+                          <KeyRound className="mr-2 size-4" />
+                          Rotate Device Secret
+                        </Button>
                       </div>
+
+                      {rotatedCredential &&
+                      rotatedCredential.deviceId === selectedDevice?.id ? (
+                        <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50/80 p-3">
+                          <p className="text-xs font-medium text-amber-900">
+                            New device credential (show once)
+                          </p>
+                          <p className="break-all rounded bg-white px-2 py-1 font-mono text-xs text-slate-800">
+                            {rotatedCredential.secret}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCopyCredential}
+                            >
+                              <Copy className="mr-1 size-3.5" />
+                              Copy
+                            </Button>
+                            <p className="text-xs text-amber-900/80">
+                              Rotated at{' '}
+                              {new Date(
+                                rotatedCredential.rotatedAt,
+                              ).toLocaleString()}{' '}
+                              {credentialCopyState
+                                ? `• ${credentialCopyState}`
+                                : ''}
+                            </p>
+                          </div>
+                        </div>
+                      ) : null}
 
                       <p className="text-xs text-muted-foreground">
                         {actionState[selectedDevice?.id ?? ''] ??
@@ -786,28 +886,28 @@ function mapApiDeviceToFleetDevice(
 }
 
 function formatPercent(value: number | null): string {
-  if (value === null || value === undefined) {
+  if (value === null) {
     return 'N/A'
   }
   return `${value.toFixed(1)}%`
 }
 
 function formatTemperature(value: number | null): string {
-  if (value === null || value === undefined) {
+  if (value === null) {
     return 'N/A'
   }
   return `${value.toFixed(1)} C`
 }
 
 function formatInteger(value: number | null): string {
-  if (value === null || value === undefined) {
+  if (value === null) {
     return 'N/A'
   }
   return String(value)
 }
 
 function formatLatency(value: number | null): string {
-  if (value === null || value === undefined) {
+  if (value === null) {
     return 'N/A'
   }
   return `${value}ms`
