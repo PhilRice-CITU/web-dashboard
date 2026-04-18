@@ -67,8 +67,6 @@ export function DevicesPage() {
   const [commandOpen, setCommandOpen] = useState(false)
   const [selectedDeviceId, setSelectedDeviceId] = useState('')
   const [newDeviceCode, setNewDeviceCode] = useState('')
-  const [newDeviceName, setNewDeviceName] = useState('')
-  const [newDeviceLocation, setNewDeviceLocation] = useState('')
   const [queuedCommandName, setQueuedCommandName] = useState('restart-app')
   const [actionState, setActionState] = useState<Record<string, string>>({})
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false)
@@ -119,7 +117,7 @@ export function DevicesPage() {
 
   const createDeviceMutation = useMutation({
     mutationFn: async (payload: {
-      display_name: string
+      display_name?: string
       device_id?: string
     }) => {
       const response = await httpClient.post<ApiDevice>('/devices', payload)
@@ -130,11 +128,9 @@ export function DevicesPage() {
       setAddDeviceOpen(false)
       setActionState((current) => ({
         ...current,
-        [createdDevice.id]: `Device registered • ${new Date().toLocaleTimeString()}`,
+        [createdDevice.id]: `Device connected • ${new Date().toLocaleTimeString()}`,
       }))
       setNewDeviceCode('')
-      setNewDeviceName('')
-      setNewDeviceLocation('')
     },
   })
 
@@ -148,6 +144,15 @@ export function DevicesPage() {
             source: 'web-dashboard',
           },
         },
+      )
+      return response.data
+    },
+  })
+
+  const disconnectDeviceMutation = useMutation({
+    mutationFn: async (deviceId: string) => {
+      const response = await httpClient.post<ApiDevice>(
+        `/devices/${deviceId}/disconnect`,
       )
       return response.data
     },
@@ -211,16 +216,27 @@ export function DevicesPage() {
   }
 
   const handleSaveDevice = () => {
-    const displayName =
-      newDeviceName.trim() ||
-      newDeviceCode.trim() ||
-      `Edge Device ${Date.now()}`
     const deviceId = newDeviceCode.trim()
+    if (!deviceId) {
+      return
+    }
 
-    createDeviceMutation.mutate({
-      display_name: displayName,
-      ...(deviceId ? { device_id: deviceId } : {}),
-    })
+    createDeviceMutation.mutate(
+      {
+        device_id: deviceId,
+      },
+      {
+        onError: (error) => {
+          const message =
+            (error as { response?: { data?: { detail?: string } } }).response
+              ?.data?.detail ?? 'Failed to connect device'
+          setActionState((current) => ({
+            ...current,
+            [deviceId]: `${message} • ${new Date().toLocaleTimeString()}`,
+          }))
+        },
+      },
+    )
   }
 
   const handleQueueModalCommand = () => {
@@ -230,6 +246,31 @@ export function DevicesPage() {
 
     queueCommand(selectedDevice.id, normalizeCommand(queuedCommandName))
     setCommandOpen(false)
+  }
+
+  const handleDisconnectSelectedDevice = () => {
+    if (!selectedDevice) {
+      return
+    }
+
+    disconnectDeviceMutation.mutate(selectedDevice.id, {
+      onSuccess: (updatedDevice) => {
+        queryClient.invalidateQueries({ queryKey: ['/devices'] })
+        setActionState((current) => ({
+          ...current,
+          [updatedDevice.id]: `Device disconnected • ${new Date().toLocaleTimeString()}`,
+        }))
+      },
+      onError: (error) => {
+        const message =
+          (error as { response?: { data?: { detail?: string } } }).response
+            ?.data?.detail ?? 'Failed to disconnect device'
+        setActionState((current) => ({
+          ...current,
+          [selectedDevice.id]: `${message} • ${new Date().toLocaleTimeString()}`,
+        }))
+      },
+    })
   }
 
   return (
@@ -295,9 +336,9 @@ export function DevicesPage() {
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>Add New Device</SheetTitle>
+                <SheetTitle>Connect Device</SheetTitle>
                 <SheetDescription>
-                  Register a new Pi edge device for this deployment.
+                  Link an existing edge device by its Device ID.
                 </SheetDescription>
               </SheetHeader>
               <div className="space-y-4 p-4">
@@ -310,33 +351,15 @@ export function DevicesPage() {
                     onChange={(event) => setNewDeviceCode(event.target.value)}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="device-name">Display name</Label>
-                  <Input
-                    id="device-name"
-                    placeholder="Nueva Ecija - Lab 4"
-                    value={newDeviceName}
-                    onChange={(event) => setNewDeviceName(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="device-location">Location</Label>
-                  <Input
-                    id="device-location"
-                    placeholder="PhilRice CES"
-                    value={newDeviceLocation}
-                    onChange={(event) =>
-                      setNewDeviceLocation(event.target.value)
-                    }
-                  />
-                </div>
               </div>
               <SheetFooter>
                 <Button
                   onClick={handleSaveDevice}
-                  disabled={createDeviceMutation.isPending}
+                  disabled={
+                    createDeviceMutation.isPending || !newDeviceCode.trim()
+                  }
                 >
-                  Save Device
+                  Connect Device
                 </Button>
               </SheetFooter>
             </SheetContent>
@@ -642,6 +665,15 @@ export function DevicesPage() {
                         >
                           <Power className="mr-2 size-4" />
                           Turn Off Device
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="text-rose-700"
+                          onClick={handleDisconnectSelectedDevice}
+                          disabled={disconnectDeviceMutation.isPending}
+                        >
+                          <Power className="mr-2 size-4" />
+                          Disconnect Device
                         </Button>
                       </div>
 
