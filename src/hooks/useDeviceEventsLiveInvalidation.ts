@@ -1,87 +1,37 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { supabase } from '#/lib/supabase'
-
-const MAX_RECONNECT_ATTEMPTS = 10
-const MAX_BACKOFF_MS = 30_000
-
-function getBackoffDelay(attempt: number): number {
-  return Math.min(500 * 2 ** Math.max(attempt - 1, 0), MAX_BACKOFF_MS)
-}
+import { subscribeToLiveMqttEvents } from '#/lib/liveMqttSse'
 
 export function useDeviceEventsLiveInvalidation() {
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    let socket: WebSocket | null = null
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
-    let cancelled = false
-    let reconnectAttempts = 0
-
-    async function connect() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session?.access_token) {
+    const unsubscribe = subscribeToLiveMqttEvents((parsed) => {
+      if (!parsed.channel) {
         return
       }
 
-      const apiBase =
-        import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
-      const websocketBase = apiBase.replace(/^http/, 'ws')
-
-      socket = new WebSocket(
-        `${websocketBase}/device-events/ws?token=${encodeURIComponent(session.access_token)}`,
-      )
-
-      socket.onopen = () => {
-        reconnectAttempts = 0
+      if (parsed.channel === 'telemetry' || parsed.channel === 'presence') {
+        queryClient.invalidateQueries({ queryKey: ['/devices'] })
+        return
       }
-
-      socket.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data) as {
-            type?: string
-          }
-
-          if (parsed.type !== 'device-event') {
-            return
-          }
-
-          queryClient.invalidateQueries({ queryKey: ['/devices'] })
-        } catch {
-          // Ignore malformed websocket payloads.
-        }
+      if (parsed.channel === 'logs') {
+        queryClient.invalidateQueries({
+          queryKey: ['/device-events?page=1&page_size=6'],
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['/device-events?page=1&page_size=200'],
+        })
+        return
       }
-
-      socket.onclose = () => {
-        if (cancelled) {
-          return
-        }
-
-        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-          return
-        }
-
-        const nextAttempt = reconnectAttempts + 1
-        reconnectAttempts = nextAttempt
-        const delayMs = getBackoffDelay(nextAttempt)
-        reconnectTimer = setTimeout(() => {
-          void connect()
-        }, delayMs)
+      if (parsed.channel === 'acks') {
+        queryClient.invalidateQueries({ queryKey: ['/devices'] })
       }
-    }
-
-    void connect()
+    })
 
     return () => {
-      cancelled = true
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer)
-      }
-      socket?.close()
+      unsubscribe()
     }
   }, [queryClient])
 }

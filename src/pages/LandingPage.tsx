@@ -57,8 +57,14 @@ export function LandingPage() {
     setIsTransformed(latest >= transformEnd)
   })
 
-  if (isAuthenticated) {
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return
+    }
     navigate({ to: '/dashboard' })
+  }, [isAuthenticated, navigate])
+
+  if (isAuthenticated) {
     return null
   }
 

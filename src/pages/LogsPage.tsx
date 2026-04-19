@@ -36,13 +36,6 @@ import {
 } from '#/components/ui/sheet'
 
 type EventLevel = 'INFO' | 'WARN' | 'ERROR'
-type SocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
-const MAX_RECONNECT_ATTEMPTS = 10
-const MAX_BACKOFF_MS = 30_000
-
-function getBackoffDelay(attempt: number): number {
-  return Math.min(500 * 2 ** Math.max(attempt - 1, 0), MAX_BACKOFF_MS)
-}
 
 interface LogEvent {
   time: string
@@ -58,7 +51,6 @@ export function LogsPage() {
   const [expandedTerminalDevice, setExpandedTerminalDevice] = useState<
     string | null
   >(null)
-  const [socketStatus, setSocketStatus] = useState<SocketStatus>('disconnected')
 
   const {
     data: eventsResponse,
@@ -82,84 +74,67 @@ export function LogsPage() {
   }, [eventsResponse])
 
   useEffect(() => {
-    let socket: WebSocket | null = null
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+    let source: EventSource | null = null
     let cancelled = false
-    let reconnectAttempts = 0
 
     async function connect() {
-      setSocketStatus('connecting')
-
       const {
         data: { session },
       } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        setSocketStatus('error')
+
+      if (!session?.access_token || cancelled) {
         return
       }
 
       const apiBase =
         import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
-      const websocketBase = apiBase.replace(/^http/, 'ws')
-      socket = new WebSocket(
-        `${websocketBase}/device-events/ws?token=${encodeURIComponent(session.access_token)}`,
-      )
+      const url = `${apiBase}/live/events?token=${encodeURIComponent(session.access_token)}`
+      source = new EventSource(url)
 
-      socket.onopen = () => {
-        setSocketStatus('connected')
-        reconnectAttempts = 0
-      }
-
-      socket.onmessage = (event) => {
+      source.addEventListener('mqtt', (event) => {
         try {
-          const parsed = JSON.parse(event.data) as {
-            type?: string
-            event?: ApiDeviceEvent
-          }
-
-          if (parsed.type !== 'device-event' || !parsed.event) {
+          if (!(event instanceof MessageEvent)) {
             return
           }
 
-          const mapped = mapApiEventToLogEvent(parsed.event)
-          setLiveEvents((current) => [mapped, ...current].slice(0, 250))
+          const parsed = JSON.parse(event.data) as {
+            channel?: string
+            device_id?: string
+            payload?: {
+              level?: EventLevel
+              message?: string
+              timestamp?: number
+            }
+          }
+
+          if (parsed.channel !== 'logs' || !parsed.payload?.message) {
+            return
+          }
+
+          const timestamp = parsed.payload.timestamp
+            ? parsed.payload.timestamp * 1000
+            : Date.now()
+
+          const liveEvent: LogEvent = {
+            time: new Date(timestamp).toLocaleTimeString(),
+            createdAt: timestamp,
+            device: parsed.device_id ?? 'SYSTEM',
+            level: parsed.payload.level ?? 'INFO',
+            message: parsed.payload.message,
+          }
+
+          setLiveEvents((current) => [liveEvent, ...current].slice(0, 250))
         } catch {
-          // Ignore malformed websocket payloads.
+          // Ignore malformed payloads.
         }
-      }
-
-      socket.onerror = () => {
-        setSocketStatus('error')
-      }
-
-      socket.onclose = () => {
-        if (cancelled) {
-          return
-        }
-
-        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-          setSocketStatus('error')
-          return
-        }
-
-        setSocketStatus('disconnected')
-        const nextAttempt = reconnectAttempts + 1
-        reconnectAttempts = nextAttempt
-        const delayMs = getBackoffDelay(nextAttempt)
-        reconnectTimer = setTimeout(() => {
-          void connect()
-        }, delayMs)
-      }
+      })
     }
 
     void connect()
 
     return () => {
       cancelled = true
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer)
-      }
-      socket?.close()
+      source?.close()
     }
   }, [])
 
@@ -236,17 +211,11 @@ export function LogsPage() {
         <div className="border-b border-border p-4 md:p-5">
           <h2 className="text-base font-semibold">Event Stream</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Near real-time events from edge devices and backend services.
+            Polling-based event stream from edge devices and backend services.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Stream: {socketStatus}
+            Stream: polling (15s)
           </p>
-          {socketStatus === 'error' ? (
-            <p className="mt-1 text-xs text-rose-700">
-              Live stream unavailable after {MAX_RECONNECT_ATTEMPTS} reconnect
-              attempts.
-            </p>
-          ) : null}
         </div>
 
         <div className="p-4 md:p-5">

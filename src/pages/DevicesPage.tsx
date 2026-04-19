@@ -37,6 +37,23 @@ import { httpClient } from '#/api/client'
 import type { ApiDevice, ApiDeviceCommand } from '#/api/contracts'
 import { useFetch } from '#/hooks/useApi'
 import { useDeviceEventsLiveInvalidation } from '#/hooks/useDeviceEventsLiveInvalidation'
+import {
+  subscribeToLiveMqttEvents,
+  subscribeToLiveMqttStatus,
+} from '#/lib/liveMqttSse'
+import type { LiveMqttConnectionStatus } from '#/lib/liveMqttSse'
+
+const CAMERA_STREAM_DEFAULT_FPS = Math.max(
+  1,
+  Math.min(5, Number(import.meta.env.VITE_CAMERA_STREAM_DEFAULT_FPS ?? 2)),
+)
+const CAMERA_STREAM_DEFAULT_DURATION_SECONDS = Math.max(
+  5,
+  Math.min(
+    120,
+    Number(import.meta.env.VITE_CAMERA_STREAM_DEFAULT_DURATION_SECONDS ?? 45),
+  ),
+)
 
 type DeviceAction =
   | 'capture'
@@ -72,6 +89,48 @@ export function DevicesPage() {
   const [queuedCommandName, setQueuedCommandName] = useState('restart-app')
   const [actionState, setActionState] = useState<Record<string, string>>({})
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false)
+  const [activeStreamSessionId, setActiveStreamSessionId] = useState<
+    string | null
+  >(null)
+  const [liveFrameSrc, setLiveFrameSrc] = useState<string | null>(null)
+  const [liveConnectionStatus, setLiveConnectionStatus] =
+    useState<LiveMqttConnectionStatus>('idle')
+
+  useEffect(() => {
+    const unsubscribe = subscribeToLiveMqttStatus(setLiveConnectionStatus)
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    const unsubscribe = subscribeToLiveMqttEvents((parsed) => {
+      if (parsed.channel !== 'camera' || !selectedDeviceId) {
+        return
+      }
+
+      if (parsed.device_id !== selectedDeviceId) {
+        return
+      }
+
+      const sessionId = parsed.payload?.session_id
+      if (!sessionId || sessionId !== activeStreamSessionId) {
+        return
+      }
+
+      const frameBase64 = parsed.payload?.frame_base64
+      const contentType = parsed.payload?.content_type || 'image/jpeg'
+      if (!frameBase64) {
+        return
+      }
+
+      setLiveFrameSrc(`data:${contentType};base64,${frameBase64}`)
+    })
+
+    return () => {
+      unsubscribe()
+    }
+  }, [selectedDeviceId, activeStreamSessionId])
 
   const {
     data: deviceRows,
@@ -89,6 +148,10 @@ export function DevicesPage() {
     )
   }, [deviceRows])
 
+  const selectedDevice = devices.find(
+    (device) => device.id === selectedDeviceId,
+  )
+
   useEffect(() => {
     if (!selectedDeviceId && devices.length > 0) {
       setSelectedDeviceId(devices[0].id)
@@ -104,9 +167,10 @@ export function DevicesPage() {
     }
   }, [devices, selectedDeviceId])
 
-  const selectedDevice = devices.find(
-    (device) => device.id === selectedDeviceId,
-  )
+  useEffect(() => {
+    setActiveStreamSessionId(null)
+    setLiveFrameSrc(null)
+  }, [selectedDeviceId])
 
   const { data: commandHistory = [] } = useFetch<ApiDeviceCommand[]>({
     url: selectedDevice
@@ -248,6 +312,53 @@ export function DevicesPage() {
 
     queueCommand(selectedDevice.id, normalizeCommand(queuedCommandName))
     setCommandOpen(false)
+  }
+
+  const handleStartCameraStream = async () => {
+    if (!selectedDevice) {
+      return
+    }
+
+    try {
+      const response = await httpClient.post<{
+        session_id: string
+        device_id: string
+      }>(
+        `/devices/${selectedDevice.id}/stream/start?fps=${CAMERA_STREAM_DEFAULT_FPS}&duration_seconds=${CAMERA_STREAM_DEFAULT_DURATION_SECONDS}`,
+      )
+      setActiveStreamSessionId(response.data.session_id)
+      setActionState((current) => ({
+        ...current,
+        [selectedDevice.id]: `Live stream started • ${new Date().toLocaleTimeString()}`,
+      }))
+    } catch {
+      setActionState((current) => ({
+        ...current,
+        [selectedDevice.id]: `Failed to start stream • ${new Date().toLocaleTimeString()}`,
+      }))
+    }
+  }
+
+  const handleStopCameraStream = async () => {
+    if (!selectedDevice) {
+      return
+    }
+
+    try {
+      const query = activeStreamSessionId
+        ? `?session_id=${encodeURIComponent(activeStreamSessionId)}`
+        : ''
+      await httpClient.post(`/devices/${selectedDevice.id}/stream/stop${query}`)
+    } catch {
+      // Ignore stop errors and clear UI state anyway.
+    }
+
+    setActiveStreamSessionId(null)
+    setLiveFrameSrc(null)
+    setActionState((current) => ({
+      ...current,
+      [selectedDevice.id]: `Live stream stopped • ${new Date().toLocaleTimeString()}`,
+    }))
   }
 
   const handleDisconnectSelectedDevice = () => {
@@ -625,20 +736,45 @@ export function DevicesPage() {
                         Live Camera Feed
                       </CardTitle>
                       <CardDescription>
-                        Mock preview stream for now. Wire to real camera
-                        endpoint later.
+                        MQTT relayed live preview for selected device.
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="relative h-64 overflow-hidden rounded-md border border-border bg-[radial-gradient(circle_at_top,#1f2937,#020617_65%)]">
-                        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(255,255,255,0.08)_50%,transparent_100%)] animate-pulse" />
+                      <div className="relative h-64 overflow-hidden rounded-md border border-border bg-black">
+                        {liveFrameSrc ? (
+                          <img
+                            src={liveFrameSrc}
+                            alt="Live camera frame"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#1f2937,#020617_65%)]" />
+                        )}
                         <div className="absolute bottom-2 left-2 rounded bg-black/65 px-2 py-1 text-xs text-slate-100">
-                          LIVE • {selectedDevice?.id ?? 'N/A'} •{' '}
+                          {activeStreamSessionId ? 'LIVE' : 'IDLE'} •{' '}
+                          {formatLiveConnectionStatus(liveConnectionStatus)} •{' '}
+                          {selectedDevice?.id ?? 'N/A'} •{' '}
                           {formatLatency(telemetry.networkLatencyMs)}
                         </div>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={handleStartCameraStream}
+                          disabled={
+                            !selectedDevice || Boolean(activeStreamSessionId)
+                          }
+                        >
+                          Start Stream
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={handleStopCameraStream}
+                          disabled={!selectedDevice || !activeStreamSessionId}
+                        >
+                          Stop Stream
+                        </Button>
                         <Button
                           variant="outline"
                           onClick={() => runDeviceAction('capture')}
@@ -702,6 +838,10 @@ export function DevicesPage() {
                       <p>
                         Approx network latency:{' '}
                         {formatLatency(telemetry.networkLatencyMs)}
+                      </p>
+                      <p>
+                        Live transport status:{' '}
+                        {formatLiveConnectionStatus(liveConnectionStatus)}
                       </p>
                       <p>
                         Total samples processed:{' '}
@@ -779,7 +919,9 @@ function normalizeCommand(value: string): string {
     command === 'capture' ||
     command === 'restart-app' ||
     command === 'restart-device' ||
-    command === 'shutdown-device'
+    command === 'shutdown-device' ||
+    command === 'camera-stream-start' ||
+    command === 'camera-stream-stop'
   ) {
     return command
   }
@@ -833,6 +975,19 @@ function formatInteger(value: number | null): string {
     return 'N/A'
   }
   return String(value)
+}
+
+function formatLiveConnectionStatus(status: LiveMqttConnectionStatus): string {
+  if (status === 'connected') {
+    return 'connected'
+  }
+  if (status === 'connecting') {
+    return 'connecting'
+  }
+  if (status === 'reconnecting') {
+    return 'reconnecting'
+  }
+  return 'idle'
 }
 
 function formatLatency(value: number | null): string {
