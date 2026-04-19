@@ -4,12 +4,12 @@ import type { Device } from '#/lib/mockData'
 import { ArrowDown, PanelLeftIcon, Plus, Settings } from 'lucide-react'
 import { AppSidebar } from '#/components/app-sidebar'
 import { DeviceMap } from '#/components/map/DeviceMap'
-import {
-  type ApiAnalyticsSummary,
-  type ApiDashboardSummary,
-  type ApiDevice,
-  type ApiDeviceEvent,
-  type ApiDeviceEventsListResponse,
+import type {
+  ApiAnalyticsSummary,
+  ApiDashboardSummary,
+  ApiDevice,
+  ApiDeviceEvent,
+  ApiDeviceEventsListResponse,
 } from '#/api/contracts'
 import {
   Breadcrumb,
@@ -20,6 +20,7 @@ import {
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { useFetch } from '#/hooks/useApi'
+import { useDeviceEventsLiveInvalidation } from '#/hooks/useDeviceEventsLiveInvalidation'
 import {
   SidebarInset,
   SidebarProvider,
@@ -29,11 +30,12 @@ import {
 
 export function DashboardPage() {
   const navigate = useNavigate()
+  useDeviceEventsLiveInvalidation()
 
   const { data: devicesResponse } = useFetch<ApiDevice[]>({
     url: '/devices',
     retry: false,
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   })
 
   const { data: analyticsResponse } = useFetch<ApiAnalyticsSummary>({

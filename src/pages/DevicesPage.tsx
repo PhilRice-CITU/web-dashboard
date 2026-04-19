@@ -36,6 +36,7 @@ import {
 import { httpClient } from '#/api/client'
 import type { ApiDevice, ApiDeviceCommand } from '#/api/contracts'
 import { useFetch } from '#/hooks/useApi'
+import { useDeviceEventsLiveInvalidation } from '#/hooks/useDeviceEventsLiveInvalidation'
 
 type DeviceAction =
   | 'capture'
@@ -63,6 +64,7 @@ type FleetDevice = {
 
 export function DevicesPage() {
   const queryClient = useQueryClient()
+  useDeviceEventsLiveInvalidation()
   const [addDeviceOpen, setAddDeviceOpen] = useState(false)
   const [commandOpen, setCommandOpen] = useState(false)
   const [selectedDeviceId, setSelectedDeviceId] = useState('')
@@ -78,7 +80,7 @@ export function DevicesPage() {
   } = useFetch<ApiDevice[]>({
     url: '/devices',
     retry: false,
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   })
 
   const devices = useMemo<FleetDevice[]>(() => {
