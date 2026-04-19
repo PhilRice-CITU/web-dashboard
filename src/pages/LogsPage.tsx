@@ -46,6 +46,7 @@ function getBackoffDelay(attempt: number): number {
 
 interface LogEvent {
   time: string
+  createdAt: number
   device: string
   level: EventLevel
   message: string
@@ -58,7 +59,6 @@ export function LogsPage() {
     string | null
   >(null)
   const [socketStatus, setSocketStatus] = useState<SocketStatus>('disconnected')
-  const [reconnectCount, setReconnectCount] = useState(0)
 
   const {
     data: eventsResponse,
@@ -108,7 +108,6 @@ export function LogsPage() {
       socket.onopen = () => {
         setSocketStatus('connected')
         reconnectAttempts = 0
-        setReconnectCount(0)
       }
 
       socket.onmessage = (event) => {
@@ -147,7 +146,6 @@ export function LogsPage() {
         const nextAttempt = reconnectAttempts + 1
         reconnectAttempts = nextAttempt
         const delayMs = getBackoffDelay(nextAttempt)
-        setReconnectCount(nextAttempt)
         reconnectTimer = setTimeout(() => {
           void connect()
         }, delayMs)
@@ -397,8 +395,11 @@ export function LogsPage() {
 }
 
 function mapApiEventToLogEvent(event: ApiDeviceEvent): LogEvent {
+  const createdAt = new Date(event.created_at).getTime()
+
   return {
-    time: new Date(event.created_at).toLocaleTimeString(),
+    time: new Date(createdAt).toLocaleTimeString(),
+    createdAt,
     device: event.device_id ?? 'SYSTEM',
     level: event.level,
     message: event.message,
@@ -426,6 +427,11 @@ function DeviceTerminal({
   events: LogEvent[]
   onExpand: () => void
 }) {
+  const newestFirstEvents = [...events].sort(
+    (left, right) => right.createdAt - left.createdAt,
+  )
+  const collapsedTerminalEvents = [...newestFirstEvents.slice(0, 12)].reverse()
+
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
@@ -441,7 +447,7 @@ function DeviceTerminal({
         </Button>
       </div>
       <div className="h-full overflow-auto bg-zinc-950 p-3 font-mono text-[11px] leading-5 text-zinc-200">
-        {events.map((event) => (
+        {collapsedTerminalEvents.map((event) => (
           <p
             key={`${event.time}-${event.message}`}
             className="wrap-break-word pb-1"
