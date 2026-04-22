@@ -24,6 +24,7 @@ import { Route as AuthenticatedDocsRouteImport } from './routes/_authenticated/d
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedDevicesDeviceIdRouteImport } from './routes/_authenticated/devices.$deviceId'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -100,6 +101,12 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDevicesDeviceIdRoute =
+  AuthenticatedDevicesDeviceIdRouteImport.update({
+    id: '/$deviceId',
+    path: '/$deviceId',
+    getParentRoute: () => AuthenticatedDevicesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -109,13 +116,14 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/devices': typeof AuthenticatedDevicesRoute
+  '/devices': typeof AuthenticatedDevicesRouteWithChildren
   '/docs': typeof AuthenticatedDocsRoute
   '/images': typeof AuthenticatedImagesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/suggestions': typeof AuthenticatedSuggestionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
+  '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,13 +133,14 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/devices': typeof AuthenticatedDevicesRoute
+  '/devices': typeof AuthenticatedDevicesRouteWithChildren
   '/docs': typeof AuthenticatedDocsRoute
   '/images': typeof AuthenticatedImagesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/suggestions': typeof AuthenticatedSuggestionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
+  '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,13 +152,14 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/devices': typeof AuthenticatedDevicesRoute
+  '/_authenticated/devices': typeof AuthenticatedDevicesRouteWithChildren
   '/_authenticated/docs': typeof AuthenticatedDocsRoute
   '/_authenticated/images': typeof AuthenticatedImagesRoute
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
   '/_authenticated/suggestions': typeof AuthenticatedSuggestionsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
+  '/_authenticated/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/suggestions'
     | '/auth/callback'
     | '/auth/complete-profile'
+    | '/devices/$deviceId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/suggestions'
     | '/auth/callback'
     | '/auth/complete-profile'
+    | '/devices/$deviceId'
   id:
     | '__root__'
     | '/'
@@ -201,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/suggestions'
     | '/auth/callback'
     | '/auth/complete-profile'
+    | '/_authenticated/devices/$deviceId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -321,13 +334,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/devices/$deviceId': {
+      id: '/_authenticated/devices/$deviceId'
+      path: '/$deviceId'
+      fullPath: '/devices/$deviceId'
+      preLoaderRoute: typeof AuthenticatedDevicesDeviceIdRouteImport
+      parentRoute: typeof AuthenticatedDevicesRoute
+    }
   }
 }
+
+interface AuthenticatedDevicesRouteChildren {
+  AuthenticatedDevicesDeviceIdRoute: typeof AuthenticatedDevicesDeviceIdRoute
+}
+
+const AuthenticatedDevicesRouteChildren: AuthenticatedDevicesRouteChildren = {
+  AuthenticatedDevicesDeviceIdRoute: AuthenticatedDevicesDeviceIdRoute,
+}
+
+const AuthenticatedDevicesRouteWithChildren =
+  AuthenticatedDevicesRoute._addFileChildren(AuthenticatedDevicesRouteChildren)
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
+  AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRouteWithChildren
   AuthenticatedDocsRoute: typeof AuthenticatedDocsRoute
   AuthenticatedImagesRoute: typeof AuthenticatedImagesRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
@@ -337,7 +368,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
+  AuthenticatedDevicesRoute: AuthenticatedDevicesRouteWithChildren,
   AuthenticatedDocsRoute: AuthenticatedDocsRoute,
   AuthenticatedImagesRoute: AuthenticatedImagesRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
