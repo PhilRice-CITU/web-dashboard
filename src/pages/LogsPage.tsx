@@ -1,30 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import {
-  AlertTriangle,
-  Download,
-  ExpandIcon,
-  LayoutGrid,
-  List,
-  Search,
-} from 'lucide-react'
-
-import { PlatformShell } from '#/components/layout/PlatformShell'
-import type {
-  ApiDeviceEvent,
-  ApiDeviceEventsListResponse,
-} from '#/api/contracts'
-import { Badge } from '#/components/ui/badge'
+import { AlertTriangle, Download } from 'lucide-react'
 import { Button } from '#/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '#/components/ui/dialog'
 import { Input } from '#/components/ui/input'
-import { useFetch } from '#/hooks/useApi'
-import { supabase } from '#/lib/supabase'
+import { PlatformShell } from '#/components/layout/PlatformShell'
 import {
   Sheet,
   SheetContent,
@@ -35,138 +12,28 @@ import {
   SheetTrigger,
 } from '#/components/ui/sheet'
 
-type EventLevel = 'INFO' | 'WARN' | 'ERROR'
-
-interface LogEvent {
-  time: string
-  createdAt: number
-  device: string
-  level: EventLevel
-  message: string
-}
+import { useLogsData } from '#/features/logs/hooks/useLogsData'
+import { useLogsFilter } from '#/features/logs/hooks/useLogsFilter'
+import { LogsToolbar } from '#/features/logs/components/LogsToolbar'
+import { LogListView } from '#/features/logs/components/LogListView'
+import { LogGridView } from '#/features/logs/components/LogGridView'
+import { ExpandedTerminalDialog } from '#/features/logs/components/ExpandedTerminalDialog'
 
 export function LogsPage() {
-  const [search, setSearch] = useState('')
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
-  const [expandedTerminalDevice, setExpandedTerminalDevice] = useState<
-    string | null
-  >(null)
-
+  const { liveEvents, isEventsLoading, eventsError, refetch } = useLogsData()
   const {
-    data: eventsResponse,
-    isLoading: isEventsLoading,
-    error: eventsError,
-    refetch,
-  } = useFetch<ApiDeviceEventsListResponse>({
-    url: '/device-events?page=1&page_size=200',
-    retry: false,
-    refetchInterval: 15_000,
-  })
+    search,
+    setSearch,
+    viewMode,
+    setViewMode,
+    expandedTerminalDevice,
+    setExpandedTerminalDevice,
+    filteredEvents,
+    deviceGroups,
+  } = useLogsFilter(liveEvents)
 
-  const [liveEvents, setLiveEvents] = useState<LogEvent[]>([])
-
-  useEffect(() => {
-    if (!eventsResponse) {
-      return
-    }
-
-    setLiveEvents(eventsResponse.data.map(mapApiEventToLogEvent))
-  }, [eventsResponse])
-
-  useEffect(() => {
-    let source: EventSource | null = null
-    let cancelled = false
-
-    async function connect() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session?.access_token || cancelled) {
-        return
-      }
-
-      const apiBase =
-        import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
-      const url = `${apiBase}/live/events?token=${encodeURIComponent(session.access_token)}`
-      source = new EventSource(url)
-
-      source.addEventListener('mqtt', (event) => {
-        try {
-          if (!(event instanceof MessageEvent)) {
-            return
-          }
-
-          const parsed = JSON.parse(event.data) as {
-            channel?: string
-            device_id?: string
-            payload?: {
-              level?: EventLevel
-              message?: string
-              timestamp?: number
-            }
-          }
-
-          if (parsed.channel !== 'logs' || !parsed.payload?.message) {
-            return
-          }
-
-          const timestamp = parsed.payload.timestamp
-            ? parsed.payload.timestamp * 1000
-            : Date.now()
-
-          const liveEvent: LogEvent = {
-            time: new Date(timestamp).toLocaleTimeString(),
-            createdAt: timestamp,
-            device: parsed.device_id ?? 'SYSTEM',
-            level: parsed.payload.level ?? 'INFO',
-            message: parsed.payload.message,
-          }
-
-          setLiveEvents((current) => [liveEvent, ...current].slice(0, 250))
-        } catch {
-          // Ignore malformed payloads.
-        }
-      })
-    }
-
-    void connect()
-
-    return () => {
-      cancelled = true
-      source?.close()
-    }
-  }, [])
-
-  const filteredEvents = useMemo(() => {
-    const query = search.trim().toLowerCase()
-
-    if (!query) {
-      return liveEvents
-    }
-
-    return liveEvents.filter((event) =>
-      `${event.device} ${event.level} ${event.message} ${event.time}`
-        .toLowerCase()
-        .includes(query),
-    )
-  }, [liveEvents, search])
-
-  const deviceGroups = useMemo(() => {
-    const grouped = filteredEvents.reduce<Record<string, LogEvent[]>>(
-      (accumulator, event) => {
-        accumulator[event.device] ??= []
-        accumulator[event.device].push(event)
-        return accumulator
-      },
-      {},
-    )
-
-    return Object.entries(grouped).map(([device, events]) => ({
-      device,
-      events,
-    }))
-  }, [filteredEvents])
+  const expandedDeviceEvents =
+    deviceGroups.find((g) => g.device === expandedTerminalDevice)?.events ?? []
 
   return (
     <PlatformShell
@@ -219,214 +86,41 @@ export function LogsPage() {
         </div>
 
         <div className="p-4 md:p-5">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by device, level, or message..."
-              className="min-w-56 flex-1"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8.5"
-              onClick={() => refetch()}
-            >
-              <Search className="mr-2 size-4" />
-              Search
-            </Button>
-            <div className="ml-auto inline-flex rounded-md border border-border bg-background p-0.5">
-              <Button
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="h-7"
-              >
-                <List className="mr-2 size-4" />
-                List
-              </Button>
-              <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="h-7"
-              >
-                <LayoutGrid className="mr-2 size-4" />
-                Grid
-              </Button>
-            </div>
-          </div>
+          <LogsToolbar
+            search={search}
+            onSearch={setSearch}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onRefetch={refetch}
+          />
 
-          {eventsError ? (
+          {eventsError && (
             <div className="mb-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700">
               Failed to load events from API.
             </div>
-          ) : null}
-
-          {isEventsLoading ? (
+          )}
+          {isEventsLoading && (
             <div className="mb-3 rounded-md border border-border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
               Loading event stream...
             </div>
-          ) : null}
+          )}
 
           {viewMode === 'list' ? (
-            <div className="space-y-2">
-              {filteredEvents.map((event) => (
-                <div
-                  key={`${event.device}-${event.time}-${event.message}`}
-                  className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-background p-3"
-                >
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {event.time}
-                  </p>
-                  <Badge className={getLevelBadgeClassName(event.level)}>
-                    {event.level}
-                  </Badge>
-                  <p className="text-sm font-medium text-foreground">
-                    {event.device}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {event.message}
-                  </p>
-                </div>
-              ))}
-              {filteredEvents.length === 0 && (
-                <p className="py-6 text-center text-sm text-muted-foreground">
-                  No logs match your search.
-                </p>
-              )}
-            </div>
+            <LogListView events={filteredEvents} />
           ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                {deviceGroups.map((group) => (
-                  <div
-                    key={group.device}
-                    className="min-h-72 overflow-hidden rounded-lg border border-border bg-muted/20 lg:min-h-88"
-                  >
-                    <DeviceTerminal
-                      device={group.device}
-                      events={group.events}
-                      onExpand={() => setExpandedTerminalDevice(group.device)}
-                    />
-                  </div>
-                ))}
-              </div>
-              {deviceGroups.length === 0 && (
-                <p className="py-6 text-center text-sm text-muted-foreground">
-                  No device logs to display.
-                </p>
-              )}
-            </div>
+            <LogGridView
+              groups={deviceGroups}
+              onExpand={setExpandedTerminalDevice}
+            />
           )}
         </div>
 
-        {expandedTerminalDevice ? (
-          <Dialog
-            open={Boolean(expandedTerminalDevice)}
-            onOpenChange={(open) => {
-              if (!open) {
-                setExpandedTerminalDevice(null)
-              }
-            }}
-          >
-            <DialogContent className="w-[94vw] max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>
-                  Terminal Logs • {expandedTerminalDevice}
-                </DialogTitle>
-                <DialogDescription>
-                  Full, scrollable log stream for selected device.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="h-[calc(100vh-10rem)] overflow-auto rounded-md border border-border bg-zinc-950 p-3 font-mono text-xs leading-5 text-zinc-200 m-2 mt-0">
-                {(
-                  deviceGroups.find(
-                    (entry) => entry.device === expandedTerminalDevice,
-                  )?.events ?? []
-                ).map((event) => (
-                  <p
-                    key={`${event.time}-${event.message}`}
-                    className="wrap-break-word pb-1"
-                  >
-                    <span className="text-zinc-400">[{event.time}]</span>{' '}
-                    <span className="text-zinc-300">[{event.level}]</span>{' '}
-                    <span className="text-zinc-100">{event.message}</span>
-                  </p>
-                ))}
-              </div>
-            </DialogContent>
-          </Dialog>
-        ) : null}
+        <ExpandedTerminalDialog
+          device={expandedTerminalDevice}
+          events={expandedDeviceEvents}
+          onClose={() => setExpandedTerminalDevice(null)}
+        />
       </section>
     </PlatformShell>
-  )
-}
-
-function mapApiEventToLogEvent(event: ApiDeviceEvent): LogEvent {
-  const createdAt = new Date(event.created_at).getTime()
-
-  return {
-    time: new Date(createdAt).toLocaleTimeString(),
-    createdAt,
-    device: event.device_id ?? 'SYSTEM',
-    level: event.level,
-    message: event.message,
-  }
-}
-
-function getLevelBadgeClassName(level: EventLevel) {
-  if (level === 'ERROR') {
-    return 'bg-rose-500/15 text-rose-700'
-  }
-
-  if (level === 'WARN') {
-    return 'bg-amber-500/15 text-amber-700'
-  }
-
-  return 'bg-sky-500/15 text-sky-700'
-}
-
-function DeviceTerminal({
-  device,
-  events,
-  onExpand,
-}: {
-  device: string
-  events: LogEvent[]
-  onExpand: () => void
-}) {
-  const newestFirstEvents = [...events].sort(
-    (left, right) => right.createdAt - left.createdAt,
-  )
-  const collapsedTerminalEvents = [...newestFirstEvents.slice(0, 12)].reverse()
-
-  return (
-    <div className="flex h-full flex-col overflow-hidden bg-background">
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
-        <div className="flex items-center gap-2">
-          <p className="font-mono text-xs text-foreground">{device}</p>
-          <Badge variant="outline" className="font-mono text-[11px]">
-            {events.length} logs
-          </Badge>
-        </div>
-        <Button variant="outline" size="sm" onClick={onExpand}>
-          <ExpandIcon className="mr-1 size-3.5" />
-          Expand
-        </Button>
-      </div>
-      <div className="h-full overflow-auto bg-zinc-950 p-3 font-mono text-[11px] leading-5 text-zinc-200">
-        {collapsedTerminalEvents.map((event) => (
-          <p
-            key={`${event.time}-${event.message}`}
-            className="wrap-break-word pb-1"
-          >
-            <span className="text-zinc-400">[{event.time}]</span>{' '}
-            <span className="text-zinc-300">[{event.level}]</span>{' '}
-            <span className="text-zinc-100">{event.message}</span>
-          </p>
-        ))}
-      </div>
-    </div>
   )
 }
