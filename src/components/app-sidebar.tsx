@@ -49,6 +49,11 @@ const navMain = [
     url: '/logs',
     icon: <FileClockIcon />,
   },
+  {
+    title: 'Mars',
+    url: '/mars',
+    icon: <FileClockIcon />,
+  },
 ]
 
 const navSecondary = [
