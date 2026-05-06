@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { AnalyticsPreset } from '#/components/analytics/types'
+import type { AnalyticsPreset } from '#/features/analytics/types/analytics.types'
 
 const PRESET_STORAGE_KEY = 'analytics-builder-presets-v1'
 const PRESET_SCHEMA_VERSION = 1

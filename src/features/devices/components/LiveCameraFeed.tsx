@@ -1,11 +1,11 @@
 import { Camera, Power, RefreshCw, RotateCcw } from 'lucide-react'
-import { Button } from '#/components/ui/button'
+import { Button } from '#/shared/components/ui/button'
 import {
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '#/components/ui/card'
+} from '#/shared/components/ui/card'
 import {
   formatLatency,
   formatLiveConnectionStatus,
@@ -15,7 +15,7 @@ import type {
   FleetDevice,
   DeviceTelemetry,
 } from '../types/devices.types'
-import type { LiveMqttConnectionStatus } from '#/lib/liveMqttSse'
+import type { LiveMqttConnectionStatus } from '#/shared/lib/realtime/liveMqttSse'
 
 type Props = {
   selectedDevice: FleetDevice | undefined

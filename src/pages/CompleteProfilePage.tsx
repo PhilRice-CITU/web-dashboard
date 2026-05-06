@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { supabase } from '#/lib/supabase'
-import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
-import { completeProfileSchema } from '#/lib/schemas'
+import { supabase } from '#/shared/lib/supabase'
+import { Button } from '#/shared/components/ui/button'
+import { Input } from '#/shared/components/ui/input'
+import { completeProfileSchema } from '#/features/auth/schemas/auth.schemas'
 
 export function CompleteProfilePage() {
   const navigate = useNavigate()

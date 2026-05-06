@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { httpClient } from '#/api/client'
-import type { ApiDevice } from '#/api/contracts'
+import { httpClient } from '#/shared/api/client'
+import type { ApiDevice } from '#/shared/api/contracts'
 import type { FleetDevice } from '../types/devices.types'
 
 export type UseDeviceManagementReturn = {

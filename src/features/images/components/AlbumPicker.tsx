@@ -1,4 +1,4 @@
-import { Badge } from '#/components/ui/badge'
+import { Badge } from '#/shared/components/ui/badge'
 import { AlbumCard } from './AlbumCard'
 
 type Album = { id: string; name: string; count: number }

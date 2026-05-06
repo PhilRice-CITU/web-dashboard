@@ -1,7 +1,9 @@
-import { AnalyticsChartCard } from '#/components/analytics/AnalyticsChartCard'
-import { ChartBuilderControls } from '#/components/analytics/ChartBuilderControls'
-import type { ChartBuilderConfig } from '#/components/analytics/types'
-import type { AnalyticsData } from '#/lib/mockData'
+import { AnalyticsChartCard } from '#/features/analytics/components/AnalyticsChartCard'
+import { ChartBuilderControls } from '#/features/analytics/components/ChartBuilderControls'
+import type {
+  ChartBuilderConfig,
+  AnalyticsData,
+} from '#/features/analytics/types/analytics.types'
 import { renderChart } from '../utils/analytics.utils'
 
 type Props = {

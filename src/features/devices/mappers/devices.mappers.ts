@@ -1,11 +1,12 @@
-import type { ApiDevice } from '#/api/contracts'
-import { seededCoordinate } from '#/lib/utils'
+import type { ApiDevice, ApiRegion } from '#/shared/api/contracts'
+import { seededCoordinate } from '#/shared/lib/utils'
 import type { FleetDevice, DeviceTelemetry } from '../types/devices.types'
-import type { LiveMqttConnectionStatus } from '#/lib/liveMqttSse'
+import type { LiveMqttConnectionStatus } from '#/shared/lib/realtime/liveMqttSse'
 
 export function mapApiDeviceToFleetDevice(
   device: ApiDevice,
   index: number,
+  regions?: ApiRegion[],
 ): FleetDevice {
   return {
     id: device.id,
@@ -26,7 +27,9 @@ export function mapApiDeviceToFleetDevice(
     queueDepth: device.queue_depth,
     latitude: seededCoordinate(device.id, 14.8, 16.1, index),
     longitude: seededCoordinate(device.id, 120.4, 121.6, index + 4),
-    location: `Region ${device.region_id.slice(0, 8)}`,
+    location:
+      regions?.find((r) => r.id === device.region_id)?.name ?? 'Unknown Region',
+    regionId: device.region_id,
   }
 }
 

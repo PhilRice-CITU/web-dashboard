@@ -1,4 +1,4 @@
-import type { ApiDeviceEvent } from '#/api/contracts'
+import type { ApiDeviceEvent } from '#/shared/api/contracts'
 import type { EventLevel, LogEvent } from '../types/logs.types'
 
 export function mapApiEventToLogEvent(event: ApiDeviceEvent): LogEvent {

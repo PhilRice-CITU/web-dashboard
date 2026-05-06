@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
-import type { ApiDevice, ApiResultImagesListResponse } from '#/api/contracts'
-import { useFetch } from '#/hooks/useApi'
+import type {
+  ApiDevice,
+  ApiResultImagesListResponse,
+} from '#/shared/api/contracts'
+import { useFetch } from '#/shared/hooks/useApi'
 import { mapApiImageToCapturedImage } from '../mappers/images.mappers'
 import type {
   AlbumSelection,

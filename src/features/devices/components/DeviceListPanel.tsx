@@ -1,5 +1,13 @@
-import { Button } from '#/components/ui/button'
-import { Badge } from '#/components/ui/badge'
+import { Button } from '#/shared/components/ui/button'
+import { Badge } from '#/shared/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '#/shared/components/ui/select'
 import {
   formatPercent,
   formatTemperature,
@@ -9,6 +17,7 @@ import {
   getDeviceTelemetry,
 } from '../mappers/devices.mappers'
 import type { FleetDevice } from '../types/devices.types'
+import type { ApiRegion } from '#/shared/api/contracts'
 
 type Props = {
   devices: FleetDevice[]
@@ -18,6 +27,11 @@ type Props = {
   devicesError: unknown
   onSelectDevice: (id: string) => void
   onExpandDevice: (id: string) => void
+  regions: ApiRegion[] | undefined
+  isSuperadmin: boolean
+  userRegionId: string | null
+  regionFilter: string | null
+  onRegionFilterChange: (id: string | null) => void
 }
 
 export function DeviceListPanel({
@@ -28,16 +42,54 @@ export function DeviceListPanel({
   devicesError,
   onSelectDevice,
   onExpandDevice,
+  regions,
+  isSuperadmin,
+  userRegionId,
+  regionFilter,
+  onRegionFilterChange,
 }: Props) {
   return (
     <div className="border-b border-border xl:border-r xl:border-b-0">
       <div className="border-b border-border px-4 py-3 md:px-5">
-        <h2 className="text-base font-semibold">Devices List</h2>
-        <p className="text-sm text-muted-foreground">
-          {isRightPanelCollapsed
-            ? 'Right panel is collapsed. Expanded telemetry is shown in this list.'
-            : 'Select a device to view telemetry, live feed, and controls.'}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold">Devices List</h2>
+            <p className="text-sm text-muted-foreground">
+              {isRightPanelCollapsed
+                ? 'Right panel is collapsed. Expanded telemetry is shown in this list.'
+                : 'Select a device to view telemetry, live feed, and controls.'}
+            </p>
+          </div>
+
+          {isSuperadmin && regions && (
+            <Select
+              value={regionFilter ?? 'all'}
+              onValueChange={(val) =>
+                onRegionFilterChange(val === 'all' ? null : val)
+              }
+            >
+              <SelectTrigger className="h-8 w-44 text-xs">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                <SelectSeparator />
+                {regions.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {!isSuperadmin && userRegionId && regions && (
+            <span className="mt-0.5 rounded-md border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              {regions.find((r) => r.id === userRegionId)?.name ??
+                'Your Region'}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="divide-y divide-border">

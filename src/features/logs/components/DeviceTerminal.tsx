@@ -1,5 +1,5 @@
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
+import { Badge } from '#/shared/components/ui/badge'
+import { Button } from '#/shared/components/ui/button'
 import { ExpandIcon } from 'lucide-react'
 import type { LogEvent } from '../types/logs.types'
 

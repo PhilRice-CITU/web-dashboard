@@ -1,7 +1,8 @@
 import { useState } from 'react'
 
-import { PlatformShell } from '#/components/layout/PlatformShell'
+import { PlatformShell } from '#/shared/components/layout/PlatformShell'
 
+import { useCurrentUser } from '#/features/auth/hooks/useCurrentUser'
 import { useDeviceFleet } from '#/features/devices/hooks/useDeviceFleet'
 import { useDeviceCommands } from '#/features/devices/hooks/useDeviceCommands'
 import { useDeviceStream } from '#/features/devices/hooks/useDeviceStream'
@@ -15,8 +16,10 @@ import { SendCommandSheet } from '#/features/devices/components/SendCommandSheet
 export function DevicesPage() {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false)
   const [actionState, setActionState] = useState<Record<string, string>>({})
+  const [regionFilter, setRegionFilter] = useState<string | null>(null)
 
-  const fleet = useDeviceFleet()
+  const { isSuperadmin, regionId: userRegionId } = useCurrentUser()
+  const fleet = useDeviceFleet(regionFilter)
   const commands = useDeviceCommands(fleet.selectedDevice)
   const stream = useDeviceStream(fleet.selectedDevice, setActionState)
   const management = useDeviceManagement(fleet.selectedDevice, setActionState)
@@ -79,6 +82,11 @@ export function DevicesPage() {
             devicesError={fleet.devicesError}
             onSelectDevice={handleSelectDevice}
             onExpandDevice={handleExpandDevice}
+            regions={fleet.regions}
+            isSuperadmin={isSuperadmin}
+            userRegionId={userRegionId}
+            regionFilter={regionFilter}
+            onRegionFilterChange={setRegionFilter}
           />
 
           {!isRightPanelCollapsed && (

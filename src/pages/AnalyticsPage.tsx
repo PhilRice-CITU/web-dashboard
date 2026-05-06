@@ -1,6 +1,6 @@
 import { Download } from 'lucide-react'
-import { Button } from '#/components/ui/button'
-import { PlatformShell } from '#/components/layout/PlatformShell'
+import { Button } from '#/shared/components/ui/button'
+import { PlatformShell } from '#/shared/components/layout/PlatformShell'
 
 import { useAnalyticsFilters } from '#/features/analytics/hooks/useAnalyticsFilters'
 import { useAnalyticsData } from '#/features/analytics/hooks/useAnalyticsData'

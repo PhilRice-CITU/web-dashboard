@@ -1,10 +1,10 @@
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
-import { DeviceMap } from '#/components/map/DeviceMap'
-import type { Device } from '#/lib/mockData'
+import { Badge } from '#/shared/components/ui/badge'
+import { Button } from '#/shared/components/ui/button'
+import { DeviceMap } from '#/features/devices/components/DeviceMap'
+import type { MapDevice } from '#/features/dashboard/types/dashboard.types'
 
 type Props = {
-  devices: Device[]
+  devices: MapDevice[]
   activeDevices: number
 }
 

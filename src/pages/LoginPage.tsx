@@ -2,11 +2,11 @@ import { useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft } from 'lucide-react'
-import { loginSchema } from '#/lib/schemas'
-import type { LoginFormData } from '#/lib/schemas'
-import { useLogin, useGoogleLogin } from '#/hooks/useAuth'
-import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
+import { loginSchema } from '#/features/auth/schemas/auth.schemas'
+import type { LoginFormData } from '#/features/auth/schemas/auth.schemas'
+import { useLogin, useGoogleLogin } from '#/features/auth/hooks/useAuth'
+import { Button } from '#/shared/components/ui/button'
+import { Input } from '#/shared/components/ui/input'
 
 export function LoginPage() {
   const navigate = useNavigate()

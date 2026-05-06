@@ -1,4 +1,4 @@
-import { analyticsMetricCatalog } from '#/lib/mockData'
+import { analyticsMetricCatalog } from '#/features/analytics/constants/analyticsCatalog'
 
 type Props = {
   chartCount: number

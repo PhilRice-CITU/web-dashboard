@@ -1,13 +1,13 @@
 import { useMemo } from 'react'
-import type { Device } from '#/lib/mockData'
+import type { MapDevice } from '#/features/dashboard/types/dashboard.types'
 import type {
   ApiAnalyticsSummary,
   ApiDashboardSummary,
   ApiDevice,
   ApiDeviceEventsListResponse,
-} from '#/api/contracts'
-import { useFetch } from '#/hooks/useApi'
-import { useDeviceEventsLiveInvalidation } from '#/hooks/useDeviceEventsLiveInvalidation'
+} from '#/shared/api/contracts'
+import { useFetch } from '#/shared/hooks/useApi'
+import { useDeviceEventsLiveInvalidation } from '#/features/devices/hooks/useDeviceEventsLiveInvalidation'
 import {
   mapApiDeviceToMapDevice,
   mapApiEventToLiveSignal,
@@ -22,7 +22,7 @@ import type {
 } from '../types/dashboard.types'
 
 export type UseDashboardDataReturn = {
-  devices: Device[]
+  devices: MapDevice[]
   summary: DashboardSummary
   liveSignalsData: LiveSignal[]
   riceGradesData: RiceGrade[]
@@ -56,7 +56,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     refetchInterval: 10_000,
   })
 
-  const devices = useMemo<Device[]>(() => {
+  const devices = useMemo<MapDevice[]>(() => {
     if (!devicesResponse || devicesResponse.length === 0) return []
     return devicesResponse.map((device, index) =>
       mapApiDeviceToMapDevice(device, index),

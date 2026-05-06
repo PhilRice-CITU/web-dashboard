@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import type { ApiDeviceEventsListResponse } from '#/api/contracts'
-import { useFetch } from '#/hooks/useApi'
-import { supabase } from '#/lib/supabase'
+import type { ApiDeviceEventsListResponse } from '#/shared/api/contracts'
+import { useFetch } from '#/shared/hooks/useApi'
+import { supabase } from '#/shared/lib/supabase'
 import { mapApiEventToLogEvent } from '../mappers/logs.mappers'
 import type { EventLevel, LogEvent } from '../types/logs.types'
 

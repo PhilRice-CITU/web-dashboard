@@ -1,6 +1,6 @@
-import type { ApiDevice, ApiDeviceEvent } from '#/api/contracts'
-import type { Device } from '#/lib/mockData'
-import { seededNumber, seededCoordinate } from '#/lib/utils'
+import type { ApiDevice, ApiDeviceEvent } from '#/shared/api/contracts'
+import type { MapDevice } from '#/features/dashboard/types/dashboard.types'
+import { seededNumber, seededCoordinate } from '#/shared/lib/utils'
 import type {
   LiveSignal,
   RiceGrade,
@@ -10,7 +10,7 @@ import type {
 export function mapApiDeviceToMapDevice(
   device: ApiDevice,
   index: number,
-): Device {
+): MapDevice {
   const status =
     device.status === 'offline'
       ? 'inactive'

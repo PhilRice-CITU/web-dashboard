@@ -1,11 +1,11 @@
-import { CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import { CardContent, CardHeader, CardTitle } from '#/shared/components/ui/card'
 import {
   formatLatency,
   formatLiveConnectionStatus,
 } from '../mappers/devices.mappers'
 import type { DeviceTelemetry, FleetDevice } from '../types/devices.types'
-import type { ApiDeviceCommand } from '#/api/contracts'
-import type { LiveMqttConnectionStatus } from '#/lib/liveMqttSse'
+import type { ApiDeviceCommand } from '#/shared/api/contracts'
+import type { LiveMqttConnectionStatus } from '#/shared/lib/realtime/liveMqttSse'
 
 type Props = {
   selectedDevice: FleetDevice | undefined

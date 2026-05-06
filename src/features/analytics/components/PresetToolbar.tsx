@@ -1,13 +1,13 @@
 import { Plus } from 'lucide-react'
-import { Button } from '#/components/ui/button'
+import { Button } from '#/shared/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '#/components/ui/select'
-import type { AnalyticsPreset } from '#/components/analytics/types'
+} from '#/shared/components/ui/select'
+import type { AnalyticsPreset } from '#/features/analytics/types/analytics.types'
 
 type Props = {
   presets: AnalyticsPreset[]

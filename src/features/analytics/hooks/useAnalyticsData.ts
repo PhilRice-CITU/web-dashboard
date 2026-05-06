@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import type { ApiAnalyticsTrendsResponse } from '#/api/contracts'
-import { useFetch } from '#/hooks/useApi'
-import { generateMockAnalyticsData } from '#/lib/mockData'
-import type { AnalyticsData } from '#/lib/mockData'
-import type { ChartBuilderConfig } from '#/components/analytics/types'
+import type { ApiAnalyticsTrendsResponse } from '#/shared/api/contracts'
+import { useFetch } from '#/shared/hooks/useApi'
+import type {
+  AnalyticsData,
+  ChartBuilderConfig,
+} from '#/features/analytics/types/analytics.types'
 import {
   mapTrendPointToAnalyticsData,
   aggregateAnalyticsByGranularity,
@@ -42,7 +43,7 @@ export function useAnalyticsData(
     if (trendsResponse) {
       return trendsResponse.data.map(mapTrendPointToAnalyticsData)
     }
-    return generateMockAnalyticsData()
+    return []
   }, [trendsResponse])
 
   const filteredData = useMemo<AnalyticsData[]>(() => {

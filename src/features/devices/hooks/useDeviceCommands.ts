@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { httpClient } from '#/api/client'
-import type { ApiDeviceCommand } from '#/api/contracts'
-import { useFetch } from '#/hooks/useApi'
+import { httpClient } from '#/shared/api/client'
+import type { ApiDeviceCommand } from '#/shared/api/contracts'
+import { useFetch } from '#/shared/hooks/useApi'
 import { normalizeCommand } from '../mappers/devices.mappers'
 import type { FleetDevice, DeviceAction } from '../types/devices.types'
 

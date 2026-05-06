@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
-import { PlatformShell } from '#/components/layout/PlatformShell'
-import { Button } from '#/components/ui/button'
+import { PlatformShell } from '#/shared/components/layout/PlatformShell'
+import { Button } from '#/shared/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '#/components/ui/card'
-import { Input } from '#/components/ui/input'
-import { Label } from '#/components/ui/label'
-import { useFetch, useCreate } from '#/hooks/useApi'
+} from '#/shared/components/ui/card'
+import { Input } from '#/shared/components/ui/input'
+import { Label } from '#/shared/components/ui/label'
+import { useFetch, useCreate } from '#/shared/hooks/useApi'
 
 interface SuggestionResponse {
   id: string

@@ -1,4 +1,4 @@
-import type { ApiResultImage } from '#/api/contracts'
+import type { ApiResultImage } from '#/shared/api/contracts'
 import type { CapturedImage, ImageKind, ViewMode } from '../types/images.types'
 
 export function mapApiImageToCapturedImage(

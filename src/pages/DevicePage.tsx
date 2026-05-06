@@ -2,10 +2,10 @@ import type { ReactNode } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Cpu, MapPin, Wifi } from 'lucide-react'
-import { PlatformShell } from '#/components/layout/PlatformShell'
-import { Badge } from '#/components/ui/badge'
-import { Skeleton } from '#/components/ui/skeleton'
-import { httpClient } from '#/api/client'
+import { PlatformShell } from '#/shared/components/layout/PlatformShell'
+import { Badge } from '#/shared/components/ui/badge'
+import { Skeleton } from '#/shared/components/ui/skeleton'
+import { httpClient } from '#/shared/api/client'
 
 interface DeviceDetail {
   id: string

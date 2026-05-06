@@ -12,15 +12,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu'
-import { useAppStore } from '#/store/appStore'
-import { HeroRevealSection } from '#/pages/sections/HeroRevealSection'
-import { ProjectIntroSection } from '#/pages/sections/ProjectIntroSection'
-import { DeviceDisassemblySection } from '#/pages/sections/DeviceDisassemblySection'
+} from '#/shared/components/ui/dropdown-menu'
+import { useSession } from '#/features/auth/hooks/useAuth'
+import { HeroRevealSection } from '#/features/landing/sections/HeroRevealSection'
+import { ProjectIntroSection } from '#/features/landing/sections/ProjectIntroSection'
+import { DeviceDisassemblySection } from '#/features/landing/sections/DeviceDisassemblySection'
 
 export function LandingPage() {
   const navigate = useNavigate()
-  const isAuthenticated = useAppStore((state) => state.isAuthenticated)
+  const { data: session } = useSession()
+  const isAuthenticated = !!session
   const [viewportHeight, setViewportHeight] = useState(900)
   const [isTransformed, setIsTransformed] = useState(false)
   const { scrollY } = useScroll()

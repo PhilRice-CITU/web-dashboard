@@ -20,6 +20,7 @@ export type FleetDevice = {
   latitude: number
   longitude: number
   location: string
+  regionId: string
 }
 
 export type DeviceTelemetry = {

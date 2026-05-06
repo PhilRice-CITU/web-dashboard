@@ -1,7 +1,7 @@
 import { AlertTriangle, Download } from 'lucide-react'
-import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
-import { PlatformShell } from '#/components/layout/PlatformShell'
+import { Button } from '#/shared/components/ui/button'
+import { Input } from '#/shared/components/ui/input'
+import { PlatformShell } from '#/shared/components/layout/PlatformShell'
 import {
   Sheet,
   SheetContent,
@@ -10,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '#/components/ui/sheet'
+} from '#/shared/components/ui/sheet'
 
 import { useLogsData } from '#/features/logs/hooks/useLogsData'
 import { useLogsFilter } from '#/features/logs/hooks/useLogsFilter'

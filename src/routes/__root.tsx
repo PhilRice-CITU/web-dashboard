@@ -6,10 +6,10 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import { Button } from '#/components/ui/button'
-import { QueryProvider } from '#/providers/QueryProvider'
-import { AuthProvider } from '#/providers/AuthProvider'
-import appCss from '../styles.css?url'
+import { Button } from '#/shared/components/ui/button'
+import { QueryProvider } from '#/app/providers/QueryProvider'
+import { AuthProvider } from '#/app/providers/AuthProvider'
+import appCss from '../app/styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({

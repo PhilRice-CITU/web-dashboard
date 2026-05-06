@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Purpose
 
-React admin dashboard for the Rice Vision system. Provides analytics, device management, and scan result review with role-based access control. Currently uses mock data in several pages — see "Backend Integration" below.
+React admin dashboard for the Rice Vision system. Provides analytics, device management, and scan result review with role-based access control using live API data.
 
 ## Commands
 
@@ -36,33 +36,35 @@ Pre-commit hooks (Husky) run ESLint, Prettier, and a build check automatically o
 
 ```
 src/
-├── routes/             — TanStack Router (file-based); __root.tsx is the layout shell
-├── pages/              — Full page components (LandingPage, LoginPage, RegisterPage, DashboardPage)
-├── api/
-│   ├── client.ts       — Axios client (sends Bearer token, redirects to /login on 401)
-│   └── types/openapi.ts — Auto-generated from API OpenAPI schema (do not hand-edit)
-├── hooks/useApi.ts     — TanStack Query hooks wrapping the API client
-├── store/appStore.ts   — Zustand: auth state, theme, UI flags
-├── providers/          — ThemeProvider (CSS variable injection), QueryProvider
-└── lib/
-    ├── themes.ts       — 6 themes (light, dark, monokai, nord, dracula, solarized)
-    ├── mockData.ts     — Placeholder analytics data (replace with real API calls)
-    └── schemas.ts      — Zod validation schemas for forms
+├── app/
+│   ├── providers/      — AuthProvider + QueryProvider
+│   ├── store/uiStore.ts — UI-only Zustand state (sidebar)
+│   ├── router.tsx      — TanStack router registration
+│   └── styles.css      — Global styles
+├── routes/             — TanStack Router file routes; __root.tsx is app shell
+├── pages/              — Top-level page entry components
+├── features/           — Feature-first domains (auth, analytics, dashboard, devices, images, logs, landing)
+│   └── <feature>/      — components, hooks, mappers, types, schemas, mocks, utils
+└── shared/
+    ├── api/            — Axios client, API contracts, generated OpenAPI types
+    ├── components/     — shared layout + shadcn UI primitives
+    ├── hooks/          — generic hooks (e.g., useApi, useMobile)
+    └── lib/            — cross-cutting utilities (supabase, scoring, realtime SSE, utils)
 ```
 
 ## Auth
 
-Auth token lives in localStorage key `authToken`. The Axios client in `src/api/client.ts` attaches it as `Authorization: Bearer <token>` on every request and clears it + redirects to `/login` on any 401 response.
+Authentication uses Supabase session tokens (`supabase.auth.getSession()`). The Axios client (`src/shared/api/client.ts`) attaches `Authorization: Bearer <access_token>` on each request.
 
-Roles: `user` (standard) and `admin`/PI (elevated access). PI access is gated by a PI key (`PHILRICE-PI-2026` in demo mode) entered during registration.
+Roles in dashboard flows are `superadmin` and `admin` (`region_id` scoped).
 
 ## Theme System
 
-6 themes defined in `src/lib/themes.ts`. Theme selection persists in localStorage. `ThemeProvider` injects CSS custom properties on the `<html>` element — all color usage should reference these variables, not hardcoded values.
+Theme primitives currently come from shared CSS variables and shadcn tokens. There is no `themes.ts` file in the current structure.
 
 ## Backend Integration
 
-Several pages currently use `src/lib/mockData.ts`. When connecting to the real `api-server`:
+Dashboard pages are wired for live API data. For local integration:
 
 1. Set env vars in `.env`:
    ```
@@ -71,20 +73,31 @@ Several pages currently use `src/lib/mockData.ts`. When connecting to the real `
    ```
 2. Regenerate TypeScript types from the live API:
    ```bash
-   npx openapi-typescript http://localhost:3001/openapi.json -o src/api/types/openapi.ts
+   npx openapi-typescript http://localhost:3001/openapi.json -o src/shared/api/types/openapi.ts
    ```
-3. Replace `mockData` imports with `useApi` hooks in affected pages.
+3. Verify API auth/session and route guards by testing protected pages (`/dashboard`, `/devices`, `/analytics`, `/logs`, `/images`).
 
 WebSocket events expected: `device.heartbeat`, `device.status.changed`, `analysis.result.created`, `logs.event`, `command.ack`.
 
 ## Routes
 
-| Route        | Auth |
-| ------------ | ---- |
-| `/`          | No   |
-| `/login`     | No   |
-| `/register`  | No   |
-| `/dashboard` | Yes  |
+| Route                    | Auth |
+| ------------------------ | ---- |
+| `/`                      | No   |
+| `/about`                 | No   |
+| `/login`                 | No   |
+| `/register`              | No   |
+| `/terms`                 | No   |
+| `/auth/callback`         | No   |
+| `/auth/complete-profile` | No   |
+| `/dashboard`             | Yes  |
+| `/devices`               | Yes  |
+| `/devices/:deviceId`     | Yes  |
+| `/images`                | Yes  |
+| `/analytics`             | Yes  |
+| `/logs`                  | Yes  |
+| `/suggestions`           | Yes  |
+| `/docs`                  | Yes  |
 
 ## Adding shadcn/ui Components
 

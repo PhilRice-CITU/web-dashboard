@@ -1,16 +1,16 @@
-import type { ApiAnalyticsTrendPoint } from '#/api/contracts'
+import type { ApiAnalyticsTrendPoint } from '#/shared/api/contracts'
 import type {
   AnalyticsAggregation,
   AnalyticsData,
   AnalyticsMetricKey,
-} from '#/lib/mockData'
-import { analyticsMetricCatalog } from '#/lib/mockData'
-import type { ChartBuilderConfig } from '#/components/analytics/types'
-import { BarAnalyticsChart } from '#/components/analytics/charts/BarAnalyticsChart'
-import { AreaAnalyticsChart } from '#/components/analytics/charts/AreaAnalyticsChart'
-import { PieAnalyticsChart } from '#/components/analytics/charts/PieAnalyticsChart'
-import { ComposedAnalyticsChart } from '#/components/analytics/charts/ComposedAnalyticsChart'
-import { LineAnalyticsChart } from '#/components/analytics/charts/LineAnalyticsChart'
+  ChartBuilderConfig,
+} from '#/features/analytics/types/analytics.types'
+import { analyticsMetricCatalog } from '#/features/analytics/constants/analyticsCatalog'
+import { BarAnalyticsChart } from '#/features/analytics/components/charts/BarAnalyticsChart'
+import { AreaAnalyticsChart } from '#/features/analytics/components/charts/AreaAnalyticsChart'
+import { PieAnalyticsChart } from '#/features/analytics/components/charts/PieAnalyticsChart'
+import { ComposedAnalyticsChart } from '#/features/analytics/components/charts/ComposedAnalyticsChart'
+import { LineAnalyticsChart } from '#/features/analytics/components/charts/LineAnalyticsChart'
 
 const DEFAULT_METRIC = 'avgQualityScore' as const
 

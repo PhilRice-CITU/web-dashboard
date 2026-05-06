@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { ChartBuilderConfig } from '#/components/analytics/types'
-import { analyticsMetricCatalog } from '#/lib/mockData'
+import type { ChartBuilderConfig } from '#/features/analytics/types/analytics.types'
+import { analyticsMetricCatalog } from '#/features/analytics/constants/analyticsCatalog'
 import {
   createDefaultChartConfig,
   isMetricCompatible,

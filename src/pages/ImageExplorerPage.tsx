@@ -9,21 +9,21 @@ import {
   Search,
 } from 'lucide-react'
 
-import { PlatformShell } from '#/components/layout/PlatformShell'
+import { PlatformShell } from '#/shared/components/layout/PlatformShell'
 import type {
   ApiDevice,
   ApiResultImage,
   ApiResultImagesListResponse,
-} from '#/api/contracts'
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
+} from '#/shared/api/contracts'
+import { Badge } from '#/shared/components/ui/badge'
+import { Button } from '#/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog'
+} from '#/shared/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -32,9 +32,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu'
-import { Input } from '#/components/ui/input'
-import { useFetch } from '#/hooks/useApi'
+} from '#/shared/components/ui/dropdown-menu'
+import { Input } from '#/shared/components/ui/input'
+import { useFetch } from '#/shared/hooks/useApi'
 
 type ViewMode = 'xl' | 'lg' | 'md' | 'sm' | 'list'
 type ImageKind = 'raw' | 'ir' | 'processed'

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { httpClient } from '#/api/client'
+import { httpClient } from '#/shared/api/client'
 import {
   subscribeToLiveMqttEvents,
   subscribeToLiveMqttStatus,
-} from '#/lib/liveMqttSse'
-import type { LiveMqttConnectionStatus } from '#/lib/liveMqttSse'
+} from '#/shared/lib/realtime/liveMqttSse'
+import type { LiveMqttConnectionStatus } from '#/shared/lib/realtime/liveMqttSse'
 import type { FleetDevice } from '../types/devices.types'
 
 const CAMERA_STREAM_DEFAULT_FPS = Math.max(

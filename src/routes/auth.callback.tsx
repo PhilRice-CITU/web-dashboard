@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { supabase } from '#/lib/supabase'
+import { supabase } from '#/shared/lib/supabase'
 
 // Use auth metadata — no DB query, no RLS dependency.
 // Email signup always sets first_name in metadata (passed via options.data).

@@ -1,4 +1,4 @@
-import { Badge } from '#/components/ui/badge'
+import { Badge } from '#/shared/components/ui/badge'
 import { getPreviewHeightClass } from '../mappers/images.mappers'
 import type { CapturedImage, ViewMode } from '../types/images.types'
 

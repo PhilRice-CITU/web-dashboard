@@ -1,12 +1,12 @@
-import { Badge } from '#/components/ui/badge'
+import { Badge } from '#/shared/components/ui/badge'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog'
-import { Separator } from '#/components/ui/separator'
+} from '#/shared/components/ui/dialog'
+import { Separator } from '#/shared/components/ui/separator'
 import type { CapturedImage } from '../types/images.types'
 
 type Props = {

@@ -1,5 +1,5 @@
-import { DitherVideoBackground } from '#/components/DitherVideoBackground'
-import { Button } from '#/components/ui/button'
+import { DitherVideoBackground } from '#/features/landing/components/DitherVideoBackground'
+import { Button } from '#/shared/components/ui/button'
 import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 
 const teamMembers = [

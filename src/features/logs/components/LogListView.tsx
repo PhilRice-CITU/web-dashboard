@@ -1,4 +1,4 @@
-import { Badge } from '#/components/ui/badge'
+import { Badge } from '#/shared/components/ui/badge'
 import { getLevelBadgeClassName } from '../mappers/logs.mappers'
 import type { LogEvent } from '../types/logs.types'
 

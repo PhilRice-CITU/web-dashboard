@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ApiDevice } from '#/api/contracts'
-import { useFetch } from '#/hooks/useApi'
-import { useDeviceEventsLiveInvalidation } from '#/hooks/useDeviceEventsLiveInvalidation'
+import type { ApiDevice, ApiRegion } from '#/shared/api/contracts'
+import { useFetch } from '#/shared/hooks/useApi'
+import { useDeviceEventsLiveInvalidation } from '#/features/devices/hooks/useDeviceEventsLiveInvalidation'
+import { useRegions } from '#/features/devices/hooks/useRegions'
 import { mapApiDeviceToFleetDevice } from '../mappers/devices.mappers'
 import type { FleetDevice } from '../types/devices.types'
 
 export type UseDeviceFleetReturn = {
   devices: FleetDevice[]
+  regions: ApiRegion[] | undefined
   selectedDevice: FleetDevice | undefined
   selectedDeviceId: string
   setSelectedDeviceId: (id: string) => void
@@ -14,7 +16,9 @@ export type UseDeviceFleetReturn = {
   devicesError: unknown
 }
 
-export function useDeviceFleet(): UseDeviceFleetReturn {
+export function useDeviceFleet(
+  regionFilter?: string | null,
+): UseDeviceFleetReturn {
   useDeviceEventsLiveInvalidation()
 
   const [selectedDeviceId, setSelectedDeviceId] = useState('')
@@ -29,13 +33,16 @@ export function useDeviceFleet(): UseDeviceFleetReturn {
     refetchInterval: 10_000,
   })
 
-  const devices = useMemo<FleetDevice[]>(
-    () =>
-      (deviceRows ?? []).map((device, index) =>
-        mapApiDeviceToFleetDevice(device, index),
-      ),
-    [deviceRows],
-  )
+  const { data: regions } = useRegions()
+
+  const devices = useMemo<FleetDevice[]>(() => {
+    const mapped = (deviceRows ?? []).map((device, index) =>
+      mapApiDeviceToFleetDevice(device, index, regions),
+    )
+    return regionFilter
+      ? mapped.filter((d) => d.regionId === regionFilter)
+      : mapped
+  }, [deviceRows, regions, regionFilter])
 
   const selectedDevice = devices.find(
     (device) => device.id === selectedDeviceId,
@@ -58,6 +65,7 @@ export function useDeviceFleet(): UseDeviceFleetReturn {
 
   return {
     devices,
+    regions,
     selectedDevice,
     selectedDeviceId,
     setSelectedDeviceId,

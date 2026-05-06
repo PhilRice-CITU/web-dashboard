@@ -1,6 +1,6 @@
 import { ChevronsRight } from 'lucide-react'
-import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
+import { Badge } from '#/shared/components/ui/badge'
+import { Button } from '#/shared/components/ui/button'
 import {
   getStatusBadgeClass,
   getDeviceTelemetry,
@@ -9,8 +9,8 @@ import { TelemetryGrid } from './TelemetryGrid'
 import { LiveCameraFeed } from './LiveCameraFeed'
 import { MonitoringNotes } from './MonitoringNotes'
 import type { DeviceAction, FleetDevice } from '../types/devices.types'
-import type { ApiDeviceCommand } from '#/api/contracts'
-import type { LiveMqttConnectionStatus } from '#/lib/liveMqttSse'
+import type { ApiDeviceCommand } from '#/shared/api/contracts'
+import type { LiveMqttConnectionStatus } from '#/shared/lib/realtime/liveMqttSse'
 
 type Props = {
   selectedDevice: FleetDevice | undefined

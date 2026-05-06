@@ -3,7 +3,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '#/components/ui/card'
+} from '#/shared/components/ui/card'
 import type { FleetDevice } from '../types/devices.types'
 
 type Props = {

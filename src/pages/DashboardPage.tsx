@@ -1,20 +1,20 @@
 import { useNavigate } from '@tanstack/react-router'
 import { Plus, Settings, PanelLeftIcon } from 'lucide-react'
 
-import { AppSidebar } from '#/components/app-sidebar'
+import { AppSidebar } from '#/shared/components/layout/AppSidebar'
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
   BreadcrumbPage,
-} from '#/components/ui/breadcrumb'
-import { Button } from '#/components/ui/button'
+} from '#/shared/components/ui/breadcrumb'
+import { Button } from '#/shared/components/ui/button'
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
-} from '#/components/ui/sidebar'
+} from '#/shared/components/ui/sidebar'
 
 import { useDashboardData } from '#/features/dashboard/hooks/useDashboardData'
 import { DashboardMetricsBar } from '#/features/dashboard/components/DashboardMetricsBar'
