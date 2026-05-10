@@ -453,7 +453,7 @@ MIT License - See LICENSE file
 
 ---
 
-**🎉 Ready to develop!**
+**🎉 Ready to develop!!**
 
 ```bash
 npm run dev
