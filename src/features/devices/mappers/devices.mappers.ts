@@ -1,7 +1,6 @@
 import type { ApiDevice, ApiRegion } from '#/shared/api/contracts'
 import { seededCoordinate } from '#/shared/lib/utils'
 import type { FleetDevice, DeviceTelemetry } from '../types/devices.types'
-import type { LiveMqttConnectionStatus } from '#/shared/lib/realtime/liveMqttSse'
 
 export function mapApiDeviceToFleetDevice(
   device: ApiDevice,
@@ -66,21 +65,6 @@ export function getStatusBadgeClass(
   return 'bg-slate-500/15 text-slate-700'
 }
 
-export function normalizeCommand(value: string): string {
-  const command = value.trim().toLowerCase()
-  if (
-    command === 'capture' ||
-    command === 'restart-app' ||
-    command === 'restart-device' ||
-    command === 'shutdown-device' ||
-    command === 'camera-stream-start' ||
-    command === 'camera-stream-stop'
-  ) {
-    return command
-  }
-  return 'restart-app'
-}
-
 export function formatPercent(value: number | null): string {
   if (value === null) return 'N/A'
   return `${value.toFixed(1)}%`
@@ -99,13 +83,4 @@ export function formatInteger(value: number | null): string {
 export function formatLatency(value: number | null): string {
   if (value === null) return 'N/A'
   return `${value}ms`
-}
-
-export function formatLiveConnectionStatus(
-  status: LiveMqttConnectionStatus,
-): string {
-  if (status === 'connected') return 'connected'
-  if (status === 'connecting') return 'connecting'
-  if (status === 'reconnecting') return 'reconnecting'
-  return 'idle'
 }

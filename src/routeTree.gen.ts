@@ -24,6 +24,7 @@ import { Route as AuthenticatedDocsRouteImport } from './routes/_authenticated/d
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedScansScanIdRouteImport } from './routes/_authenticated/scans.$scanId'
 import { Route as AuthenticatedDevicesDeviceIdRouteImport } from './routes/_authenticated/devices.$deviceId'
 
 const TermsRoute = TermsRouteImport.update({
@@ -101,6 +102,12 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedScansScanIdRoute =
+  AuthenticatedScansScanIdRouteImport.update({
+    id: '/scans/$scanId',
+    path: '/scans/$scanId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDevicesDeviceIdRoute =
   AuthenticatedDevicesDeviceIdRouteImport.update({
     id: '/$deviceId',
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
   '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
+  '/scans/$scanId': typeof AuthenticatedScansScanIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
   '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
+  '/scans/$scanId': typeof AuthenticatedScansScanIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
   '/_authenticated/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
+  '/_authenticated/scans/$scanId': typeof AuthenticatedScansScanIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/complete-profile'
     | '/devices/$deviceId'
+    | '/scans/$scanId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/complete-profile'
     | '/devices/$deviceId'
+    | '/scans/$scanId'
   id:
     | '__root__'
     | '/'
@@ -214,6 +226,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/complete-profile'
     | '/_authenticated/devices/$deviceId'
+    | '/_authenticated/scans/$scanId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -334,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/scans/$scanId': {
+      id: '/_authenticated/scans/$scanId'
+      path: '/scans/$scanId'
+      fullPath: '/scans/$scanId'
+      preLoaderRoute: typeof AuthenticatedScansScanIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/devices/$deviceId': {
       id: '/_authenticated/devices/$deviceId'
       path: '/$deviceId'
@@ -363,6 +383,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedImagesRoute: typeof AuthenticatedImagesRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
   AuthenticatedSuggestionsRoute: typeof AuthenticatedSuggestionsRoute
+  AuthenticatedScansScanIdRoute: typeof AuthenticatedScansScanIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -373,6 +394,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedImagesRoute: AuthenticatedImagesRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
   AuthenticatedSuggestionsRoute: AuthenticatedSuggestionsRoute,
+  AuthenticatedScansScanIdRoute: AuthenticatedScansScanIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

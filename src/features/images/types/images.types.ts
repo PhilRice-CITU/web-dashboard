@@ -8,6 +8,7 @@ export type SortOrder = 'newest' | 'oldest' | 'name-asc' | 'name-desc'
 
 export type CapturedImage = {
   id: string
+  resultId: string
   fileName: string
   imageUrl: string
   deviceId: string

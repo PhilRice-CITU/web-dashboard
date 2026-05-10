@@ -1,4 +1,7 @@
+import { Link } from '@tanstack/react-router'
+
 import { Badge } from '#/shared/components/ui/badge'
+import { Button } from '#/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -71,6 +74,12 @@ export function ImageDetailDialog({ image, onClose }: Props) {
                   <p className="text-xs text-muted-foreground mb-1">Size</p>
                   <p>{image.sizeKb} KB</p>
                 </div>
+                <Separator />
+                <Button asChild size="sm" className="w-full">
+                  <Link to="/scans/$scanId" params={{ scanId: image.resultId }}>
+                    Open scan detail
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>

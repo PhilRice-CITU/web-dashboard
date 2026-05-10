@@ -1,25 +1,13 @@
 import { CardContent, CardHeader, CardTitle } from '#/shared/components/ui/card'
-import {
-  formatLatency,
-  formatLiveConnectionStatus,
-} from '../mappers/devices.mappers'
+import { formatLatency } from '../mappers/devices.mappers'
 import type { DeviceTelemetry, FleetDevice } from '../types/devices.types'
-import type { ApiDeviceCommand } from '#/shared/api/contracts'
-import type { LiveMqttConnectionStatus } from '#/shared/lib/realtime/liveMqttSse'
 
 type Props = {
   selectedDevice: FleetDevice | undefined
   telemetry: DeviceTelemetry
-  liveConnectionStatus: LiveMqttConnectionStatus
-  latestCommand: ApiDeviceCommand | undefined
 }
 
-export function MonitoringNotes({
-  selectedDevice,
-  telemetry,
-  liveConnectionStatus,
-  latestCommand,
-}: Props) {
+export function MonitoringNotes({ selectedDevice, telemetry }: Props) {
   return (
     <div className="border-l border-border">
       <CardHeader className="pb-2 pt-4">
@@ -36,16 +24,8 @@ export function MonitoringNotes({
           Approx network latency: {formatLatency(telemetry.networkLatencyMs)}
         </p>
         <p>
-          API event stream: {formatLiveConnectionStatus(liveConnectionStatus)}
-        </p>
-        <p>
           Total samples processed: {selectedDevice?.samplesProcessed ?? 'N/A'}
         </p>
-        {latestCommand ? (
-          <p>
-            Latest command: {latestCommand.command} ({latestCommand.status})
-          </p>
-        ) : null}
       </CardContent>
     </div>
   )

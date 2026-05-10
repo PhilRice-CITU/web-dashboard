@@ -21,16 +21,6 @@ export interface ApiDevice {
   updated_at: string
 }
 
-export interface ApiDeviceCommand {
-  id: string
-  device_id: string
-  command: string
-  args: Record<string, unknown>
-  status: string
-  created_at: string
-  processed_at: string | null
-}
-
 export interface ApiDeviceEvent {
   id: string
   device_id: string | null
@@ -119,5 +109,85 @@ export interface ApiResultImage {
 
 export interface ApiResultImagesListResponse {
   data: ApiResultImage[]
+  count: number
+}
+
+export interface ApiPerGrain {
+  grain_id: number
+  class_label: string
+  bbox: [number, number, number, number]
+  confidence?: number
+  length_mm?: number | null
+  width_mm?: number | null
+  area_px?: number | null
+  grain_size_class?: string
+  ir_mean_intensity?: number | null
+}
+
+export interface ApiResultMetrics {
+  qualityGrade?: 'A' | 'B' | 'C' | 'D'
+  qualityScore?: number | null
+  totalGrains?: number
+  grainSizeClass?: string
+  limitingFactor?: string
+  brokenGrains?: number
+  chalkinessPercentage?: number
+  discolorationPercentage?: number
+  foreignMatter?: number
+  moistureContent?: number | null
+  grainLengthMm?: number | null
+  rawGrade?: string
+  gradeOverridden?: boolean
+  perGrain?: ApiPerGrain[]
+  parameters?: Record<string, number>
+}
+
+export interface ApiResult {
+  id: string
+  device_id: string
+  operator_name: string | null
+  rice_variety: string | null
+  metrics: ApiResultMetrics
+  status: 'pending' | 'processing' | 'graded' | 'failed' | 'corrected' | null
+  grading_error: string | null
+  graded_at: string | null
+  stub_mode: boolean | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ApiResultImageSignedUrl {
+  image_id: string
+  signed_url: string
+  expires_in: number
+}
+
+export type ResultImageVariant = 'raw' | 'ir' | 'annotated'
+
+export interface ApiGrainEdit {
+  grain_id: number
+  to_class: string
+}
+
+export interface ApiGrainCorrectionRequest {
+  edits: ApiGrainEdit[]
+}
+
+export interface ApiGradeOverrideRequest {
+  to_grade: string
+  reason: string
+}
+
+export interface ApiCorrectionHistoryItem {
+  id: string
+  result_id: string
+  corrected_by: string
+  correction_type: 'grain_class' | 'grade_override'
+  payload: Record<string, unknown>
+  created_at: string
+}
+
+export interface ApiCorrectionHistoryResponse {
+  data: ApiCorrectionHistoryItem[]
   count: number
 }

@@ -7,7 +7,6 @@ import type {
   ApiDeviceEventsListResponse,
 } from '#/shared/api/contracts'
 import { useFetch } from '#/shared/hooks/useApi'
-import { useDeviceEventsLiveInvalidation } from '#/features/devices/hooks/useDeviceEventsLiveInvalidation'
 import {
   mapApiDeviceToMapDevice,
   mapApiEventToLiveSignal,
@@ -30,8 +29,6 @@ export type UseDashboardDataReturn = {
 }
 
 export function useDashboardData(): UseDashboardDataReturn {
-  useDeviceEventsLiveInvalidation()
-
   const { data: devicesResponse } = useFetch<ApiDevice[]>({
     url: '/devices',
     retry: false,

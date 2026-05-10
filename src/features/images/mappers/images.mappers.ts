@@ -14,6 +14,7 @@ export function mapApiImageToCapturedImage(
 
   return {
     id: image.id,
+    resultId: image.result_id,
     fileName: image.file_name,
     imageUrl: image.signed_url ?? image.storage_url,
     deviceId: image.device_id,

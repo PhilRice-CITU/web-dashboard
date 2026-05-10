@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ApiDevice, ApiRegion } from '#/shared/api/contracts'
 import { useFetch } from '#/shared/hooks/useApi'
-import { useDeviceEventsLiveInvalidation } from '#/features/devices/hooks/useDeviceEventsLiveInvalidation'
 import { useRegions } from '#/features/devices/hooks/useRegions'
 import { mapApiDeviceToFleetDevice } from '../mappers/devices.mappers'
 import type { FleetDevice } from '../types/devices.types'
@@ -19,8 +18,6 @@ export type UseDeviceFleetReturn = {
 export function useDeviceFleet(
   regionFilter?: string | null,
 ): UseDeviceFleetReturn {
-  useDeviceEventsLiveInvalidation()
-
   const [selectedDeviceId, setSelectedDeviceId] = useState('')
 
   const {
