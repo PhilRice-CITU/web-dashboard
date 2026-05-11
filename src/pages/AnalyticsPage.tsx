@@ -50,8 +50,8 @@ export function AnalyticsPage() {
       <section className="space-y-4">
         <AnalyticsMetricsBar
           samples={headlineMetrics.samples}
-          avgMoisture={headlineMetrics.avgMoisture}
-          avgScore={headlineMetrics.avgScore}
+          avgBrokenGrains={headlineMetrics.avgBrokenGrains}
+          premiumShare={headlineMetrics.premiumShare}
         />
 
         {presets.presetError && (

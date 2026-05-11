@@ -12,7 +12,7 @@ import { PieAnalyticsChart } from '#/features/analytics/components/charts/PieAna
 import { ComposedAnalyticsChart } from '#/features/analytics/components/charts/ComposedAnalyticsChart'
 import { LineAnalyticsChart } from '#/features/analytics/components/charts/LineAnalyticsChart'
 
-const DEFAULT_METRIC = 'avgQualityScore' as const
+const DEFAULT_METRIC = 'avgBrokenGrains' as const
 
 export function createDefaultChartConfig(index = 0): ChartBuilderConfig {
   return {
@@ -20,7 +20,7 @@ export function createDefaultChartConfig(index = 0): ChartBuilderConfig {
     title: `Chart ${index + 1}`,
     chartType: 'line',
     primaryMetric: DEFAULT_METRIC,
-    secondaryMetric: 'avgMoisture',
+    secondaryMetric: 'avgChalkiness',
     aggregation: 'avg',
     granularity: 'daily',
   }
@@ -57,17 +57,20 @@ export function aggregateAnalyticsByGranularity(
       date: `Week ${bucketIndex + 1}`,
       totalGrains: 0,
       totalSamples: 0,
-      qualityA: 0,
-      qualityB: 0,
-      qualityC: 0,
-      qualityD: 0,
-      avgMoisture: 0,
+      gradePremium: 0,
+      grade1: 0,
+      grade2: 0,
+      grade3: 0,
+      grade4: 0,
+      grade5: 0,
+      gradeOffGrade: 0,
       avgBrokenGrains: 0,
-      avgForeignMatter: 0,
+      avgBrewers: 0,
       avgChalkiness: 0,
       avgDiscoloration: 0,
+      avgDamaged: 0,
+      avgRed: 0,
       avgLengthMm: 0,
-      avgQualityScore: 0,
     } satisfies AnalyticsData
 
     metricKeys.forEach((metric) => {
@@ -150,17 +153,20 @@ export function mapTrendPointToAnalyticsData(
     date: point.date,
     totalGrains: point.total_grains,
     totalSamples: point.total_samples,
-    qualityA: point.quality_a,
-    qualityB: point.quality_b,
-    qualityC: point.quality_c,
-    qualityD: point.quality_d,
-    avgMoisture: point.avg_moisture,
-    avgBrokenGrains: point.avg_broken_grains,
-    avgForeignMatter: point.avg_foreign_matter,
-    avgChalkiness: point.avg_chalkiness,
-    avgDiscoloration: point.avg_discoloration,
+    gradePremium: point.grade_counts.Premium ?? 0,
+    grade1: point.grade_counts['Grade no. 1'] ?? 0,
+    grade2: point.grade_counts['Grade no. 2'] ?? 0,
+    grade3: point.grade_counts['Grade no. 3'] ?? 0,
+    grade4: point.grade_counts['Grade no. 4'] ?? 0,
+    grade5: point.grade_counts['Grade no. 5'] ?? 0,
+    gradeOffGrade: point.grade_counts['Off-Grade'] ?? 0,
+    avgBrokenGrains: point.factor_averages.broken ?? 0,
+    avgBrewers: point.factor_averages.brewers ?? 0,
+    avgChalkiness: point.factor_averages.chalky ?? 0,
+    avgDiscoloration: point.factor_averages.discolored ?? 0,
+    avgDamaged: point.factor_averages.damaged ?? 0,
+    avgRed: point.factor_averages.red ?? 0,
     avgLengthMm: point.avg_length_mm,
-    avgQualityScore: point.avg_quality_score,
   }
 }
 

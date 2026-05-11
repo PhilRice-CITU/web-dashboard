@@ -12,11 +12,6 @@ export interface ApiDevice {
   status: 'active' | 'maintenance' | 'offline'
   region_id: string
   last_seen: string | null
-  cpu_percent: number | null
-  memory_percent: number | null
-  storage_percent: number | null
-  temperature_celsius: number | null
-  queue_depth: number | null
   created_at: string
   updated_at: string
 }
@@ -37,31 +32,17 @@ export interface ApiDeviceEventsListResponse {
 
 export interface ApiAnalyticsSummary {
   total_samples: number
-  quality_a: number
-  quality_b: number
-  quality_c: number
-  quality_d: number
-  avg_moisture: number | null
-  avg_broken_grains: number | null
-  avg_chalkiness: number | null
-  avg_discoloration: number | null
+  grade_counts: Partial<Record<string, number>>
+  factor_averages: Partial<Record<string, number | null>>
 }
 
 export interface ApiAnalyticsTrendPoint {
   date: string
   total_grains: number
   total_samples: number
-  quality_a: number
-  quality_b: number
-  quality_c: number
-  quality_d: number
-  avg_moisture: number
-  avg_broken_grains: number
-  avg_foreign_matter: number
-  avg_chalkiness: number
-  avg_discoloration: number
+  grade_counts: Partial<Record<string, number>>
+  factor_averages: Partial<Record<string, number>>
   avg_length_mm: number
-  avg_quality_score: number
 }
 
 export interface ApiAnalyticsTrendsResponse {
@@ -75,22 +56,12 @@ export interface ApiDashboardGradeDistribution {
   status: string
 }
 
-export interface ApiDashboardMoistureWatch {
-  device_id: string
-  device_name: string
-  moisture: number
-  delta: number
-  severity: string
-}
-
 export interface ApiDashboardSummary {
   scans_processed_today: number
   online_devices: number
   total_devices: number
-  avg_moisture: number | null
-  avg_broken_grains: number | null
+  factor_averages_today: Record<string, number | null>
   grade_distribution: ApiDashboardGradeDistribution[]
-  moisture_watch: ApiDashboardMoistureWatch[]
 }
 
 export interface ApiResultImage {
@@ -121,20 +92,30 @@ export interface ApiPerGrain {
   width_mm?: number | null
   area_px?: number | null
   grain_size_class?: string
-  ir_mean_intensity?: number | null
 }
 
+export type PnsGradeName =
+  | 'Premium'
+  | 'Grade no. 1'
+  | 'Grade no. 2'
+  | 'Grade no. 3'
+  | 'Grade no. 4'
+  | 'Grade no. 5'
+  | 'Off-Grade'
+
 export interface ApiResultMetrics {
-  qualityGrade?: 'A' | 'B' | 'C' | 'D'
-  qualityScore?: number | null
+  qualityGrade?: PnsGradeName
   totalGrains?: number
   grainSizeClass?: string
   limitingFactor?: string
   brokenGrains?: number
+  brewers?: number
   chalkinessPercentage?: number
   discolorationPercentage?: number
-  foreignMatter?: number
-  moistureContent?: number | null
+  damagedPercentage?: number
+  redKernelPercentage?: number
+  foreignCount?: number
+  paddyCount?: number
   grainLengthMm?: number | null
   rawGrade?: string
   gradeOverridden?: boolean
@@ -189,5 +170,10 @@ export interface ApiCorrectionHistoryItem {
 
 export interface ApiCorrectionHistoryResponse {
   data: ApiCorrectionHistoryItem[]
+  count: number
+}
+
+export interface ApiResultsListResponse {
+  data: ApiResult[]
   count: number
 }

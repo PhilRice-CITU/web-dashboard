@@ -21,17 +21,11 @@ import { DashboardMetricsBar } from '#/features/dashboard/components/DashboardMe
 import { EdgeMapPanel } from '#/features/dashboard/components/EdgeMapPanel'
 import { LiveOpsLog } from '#/features/dashboard/components/LiveOpsLog'
 import { RiceGradePanel } from '#/features/dashboard/components/RiceGradePanel'
-import { MoistureRiskPanel } from '#/features/dashboard/components/MoistureRiskPanel'
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const {
-    devices,
-    summary,
-    liveSignalsData,
-    riceGradesData,
-    moistureWatchData,
-  } = useDashboardData()
+  const { devices, summary, liveSignalsData, riceGradesData } =
+    useDashboardData()
 
   return (
     <SidebarProvider>
@@ -73,9 +67,8 @@ export function DashboardPage() {
               <LiveOpsLog signals={liveSignalsData} />
             </div>
 
-            <div className="grid grid-cols-1 border-t border-border xl:grid-cols-2">
+            <div className="border-t border-border">
               <RiceGradePanel grades={riceGradesData} />
-              <MoistureRiskPanel entries={moistureWatchData} />
             </div>
           </section>
         </div>

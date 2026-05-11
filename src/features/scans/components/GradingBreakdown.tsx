@@ -28,6 +28,18 @@ export function GradingBreakdown({ result }: Props) {
           Total grains: {m.totalGrains ?? 0} • Size class:{' '}
           <span className="font-mono">{m.grainSizeClass ?? '—'}</span>
         </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {(m.foreignCount ?? 0) > 0 && (
+            <Badge variant="outline">
+              Foreign objects detected: {m.foreignCount}
+            </Badge>
+          )}
+          {(m.paddyCount ?? 0) > 0 && (
+            <Badge variant="outline">
+              Paddy grains detected: {m.paddyCount}
+            </Badge>
+          )}
+        </div>
       </header>
 
       <table className="w-full text-sm">

@@ -14,18 +14,10 @@ export type RiceGrade = {
   status: 'positive' | 'negative'
 }
 
-export type MoistureEntry = {
-  site: string
-  moisture: string
-  delta: string
-  severity: 'ok' | 'warn'
-}
-
 export type DashboardSummary = {
   totalSamples: number
   onlineDevices: number
   totalDevices: number
-  avgMoistureContent: number
   avgBrokenGrainPercentage: number
 }
 

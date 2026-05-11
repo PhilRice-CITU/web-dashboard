@@ -1,43 +1,21 @@
-import type { GrainLengthClass } from '#/shared/lib/scoring/riceQuality'
-
-export interface RiceGrainResult {
-  id: string
-  timestamp: string
-  totalGrains: number
-  qualityGrade: 'A' | 'B' | 'C' | 'D'
-  qualityScore: number
-  moistureContent: number
-  brokenGrains: number
-  foreignMatter: number
-  chalkinessPercentage: number
-  discolorationPercentage: number
-  grainLengthClass: GrainLengthClass
-  grainLengthMm: number
-  normalizedBrokenGrains: number
-  normalizedForeignMatter: number
-  normalizedChalkiness: number
-  normalizedDiscoloration: number
-  normalizedLength: number
-  normalizedMoisture: number
-  status: 'analyzed' | 'processing' | 'failed'
-  deviceId: string
-}
-
 export interface AnalyticsData {
   date: string
   totalGrains: number
   totalSamples: number
-  qualityA: number
-  qualityB: number
-  qualityC: number
-  qualityD: number
-  avgMoisture: number
+  gradePremium: number
+  grade1: number
+  grade2: number
+  grade3: number
+  grade4: number
+  grade5: number
+  gradeOffGrade: number
   avgBrokenGrains: number
-  avgForeignMatter: number
+  avgBrewers: number
   avgChalkiness: number
   avgDiscoloration: number
+  avgDamaged: number
+  avgRed: number
   avgLengthMm: number
-  avgQualityScore: number
 }
 
 export type AnalyticsChartType = 'line' | 'bar' | 'area' | 'pie' | 'composed'
@@ -46,17 +24,20 @@ export type AnalyticsGranularity = 'daily' | 'weekly'
 export type AnalyticsMetricKey =
   | 'totalGrains'
   | 'totalSamples'
-  | 'qualityA'
-  | 'qualityB'
-  | 'qualityC'
-  | 'qualityD'
-  | 'avgMoisture'
+  | 'gradePremium'
+  | 'grade1'
+  | 'grade2'
+  | 'grade3'
+  | 'grade4'
+  | 'grade5'
+  | 'gradeOffGrade'
   | 'avgBrokenGrains'
-  | 'avgForeignMatter'
+  | 'avgBrewers'
   | 'avgChalkiness'
   | 'avgDiscoloration'
+  | 'avgDamaged'
+  | 'avgRed'
   | 'avgLengthMm'
-  | 'avgQualityScore'
 
 export interface ChartBuilderConfig {
   id: string

@@ -1,11 +1,12 @@
 import type { ApiDevice, ApiDeviceEvent } from '#/shared/api/contracts'
 import type { MapDevice } from '#/features/dashboard/types/dashboard.types'
+import {
+  PNS_GRADE_ORDER,
+  isPositivePnsGrade,
+  pnsGradeShortLabel,
+} from '#/shared/lib/pnsGrade'
 import { seededNumber, seededCoordinate } from '#/shared/lib/utils'
-import type {
-  LiveSignal,
-  RiceGrade,
-  MoistureEntry,
-} from '../types/dashboard.types'
+import type { LiveSignal, RiceGrade } from '../types/dashboard.types'
 
 export function mapApiDeviceToMapDevice(
   device: ApiDevice,
@@ -25,7 +26,7 @@ export function mapApiDeviceToMapDevice(
     status,
     lastSeen: device.updated_at,
     samplesProcessed: 45 + (seededNumber(device.id, 0, 360) % 360),
-    cpu: device.cpu_percent ?? 0,
+    cpu: 0,
     latitude: seededCoordinate(device.id, 14.8, 16.1, index),
     longitude: seededCoordinate(device.id, 120.4, 121.6, index + 2),
     location: `Region ${device.region_id.slice(0, 8)}`,
@@ -51,10 +52,7 @@ export function buildRiceGradesData(
   analytics:
     | {
         total_samples: number
-        quality_a: number
-        quality_b: number
-        quality_c: number
-        quality_d: number
+        grade_counts: Record<string, number>
       }
     | undefined,
 ): RiceGrade[] {
@@ -72,59 +70,26 @@ export function buildRiceGradesData(
 
   if (analytics) {
     const total = Math.max(analytics.total_samples, 1)
-    return [
-      {
-        name: 'Grade A',
-        value: `${analytics.quality_a.toLocaleString()} samples`,
-        share: Math.round((analytics.quality_a / total) * 100),
-        status: 'positive',
-      },
-      {
-        name: 'Grade B',
-        value: `${analytics.quality_b.toLocaleString()} samples`,
-        share: Math.round((analytics.quality_b / total) * 100),
-        status: 'positive',
-      },
-      {
-        name: 'Grade C',
-        value: `${analytics.quality_c.toLocaleString()} samples`,
-        share: Math.round((analytics.quality_c / total) * 100),
-        status: 'negative',
-      },
-      {
-        name: 'Grade D',
-        value: `${analytics.quality_d.toLocaleString()} samples`,
-        share: Math.round((analytics.quality_d / total) * 100),
-        status: 'negative',
-      },
-    ]
+    return PNS_GRADE_ORDER.map((grade) => {
+      const count = analytics.grade_counts[grade] ?? 0
+      return {
+        name: pnsGradeShortLabel(grade),
+        value: `${count.toLocaleString()} samples`,
+        share: Math.round((count / total) * 100),
+        status: isPositivePnsGrade(grade)
+          ? ('positive' as const)
+          : ('negative' as const),
+      }
+    })
   }
 
-  return [
-    { name: 'Grade A', value: '0 samples', share: 0, status: 'positive' },
-    { name: 'Grade B', value: '0 samples', share: 0, status: 'positive' },
-    { name: 'Grade C', value: '0 samples', share: 0, status: 'negative' },
-    { name: 'Grade D', value: '0 samples', share: 0, status: 'negative' },
-  ]
-}
-
-export function buildMoistureWatchData(
-  moistureWatch:
-    | Array<{
-        device_name: string
-        moisture: number
-        delta: number
-        severity: string
-      }>
-    | undefined,
-): MoistureEntry[] {
-  if (!moistureWatch || moistureWatch.length === 0) return []
-
-  return moistureWatch.map((item) => ({
-    site: item.device_name,
-    moisture: `${item.moisture.toFixed(1)}%`,
-    delta: `${item.delta >= 0 ? '+' : ''}${item.delta.toFixed(1)}%`,
-    severity: item.severity === 'warn' ? ('warn' as const) : ('ok' as const),
+  return PNS_GRADE_ORDER.map((grade) => ({
+    name: pnsGradeShortLabel(grade),
+    value: '0 samples',
+    share: 0,
+    status: isPositivePnsGrade(grade)
+      ? ('positive' as const)
+      : ('negative' as const),
   }))
 }
 

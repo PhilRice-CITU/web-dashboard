@@ -25,7 +25,7 @@ export function useChartManager(): UseChartManagerReturn {
     {
       ...createDefaultChartConfig(1),
       chartType: 'bar',
-      primaryMetric: 'qualityA',
+      primaryMetric: 'gradePremium',
     },
   ])
 

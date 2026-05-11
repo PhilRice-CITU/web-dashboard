@@ -14,7 +14,11 @@ export type UseAnalyticsDataReturn = {
   analyticsData: AnalyticsData[]
   filteredData: AnalyticsData[]
   chartDataMap: Record<string, AnalyticsData[]>
-  headlineMetrics: { samples: number; avgMoisture: number; avgScore: number }
+  headlineMetrics: {
+    samples: number
+    avgBrokenGrains: number
+    premiumShare: number
+  }
   isTrendsLoading: boolean
   trendsError: unknown
 }
@@ -63,10 +67,14 @@ export function useAnalyticsData(
 
       if (!matchesDate) return false
       if (gradeFilter === 'all') return true
-      if (gradeFilter === 'A') return row.qualityA >= row.qualityB
-      if (gradeFilter === 'B') return row.qualityB >= row.qualityC
-      if (gradeFilter === 'C') return row.qualityC >= row.qualityD
-      return row.qualityD > 0
+      if (gradeFilter === 'Premium') return row.gradePremium > 0
+      if (gradeFilter === 'Grade no. 1') return row.grade1 > 0
+      if (gradeFilter === 'Grade no. 2') return row.grade2 > 0
+      if (gradeFilter === 'Grade no. 3') return row.grade3 > 0
+      if (gradeFilter === 'Grade no. 4') return row.grade4 > 0
+      if (gradeFilter === 'Grade no. 5') return row.grade5 > 0
+      if (gradeFilter === 'Off-Grade') return row.gradeOffGrade > 0
+      return true
     })
   }, [analyticsData, filters])
 
@@ -81,22 +89,24 @@ export function useAnalyticsData(
 
   const headlineMetrics = useMemo(() => {
     if (filteredData.length === 0) {
-      return { samples: 0, avgMoisture: 0, avgScore: 0 }
+      return { samples: 0, avgBrokenGrains: 0, premiumShare: 0 }
     }
     const samples = filteredData.reduce(
       (total, row) => total + row.totalSamples,
       0,
     )
-    const avgMoisture =
-      filteredData.reduce((total, row) => total + row.avgMoisture, 0) /
+    const avgBrokenGrains =
+      filteredData.reduce((total, row) => total + row.avgBrokenGrains, 0) /
       filteredData.length
-    const avgScore =
-      filteredData.reduce((total, row) => total + row.avgQualityScore, 0) /
-      filteredData.length
+    const premiumCount = filteredData.reduce(
+      (total, row) => total + row.gradePremium + row.grade1,
+      0,
+    )
+    const premiumShare = samples > 0 ? (premiumCount / samples) * 100 : 0
     return {
       samples,
-      avgMoisture: Number(avgMoisture.toFixed(2)),
-      avgScore: Number(avgScore.toFixed(2)),
+      avgBrokenGrains: Number(avgBrokenGrains.toFixed(2)),
+      premiumShare: Number(premiumShare.toFixed(1)),
     }
   }, [filteredData])
 

@@ -11,13 +11,11 @@ import {
   mapApiDeviceToMapDevice,
   mapApiEventToLiveSignal,
   buildRiceGradesData,
-  buildMoistureWatchData,
 } from '../mappers/dashboard.mappers'
 import type {
   DashboardSummary,
   LiveSignal,
   RiceGrade,
-  MoistureEntry,
 } from '../types/dashboard.types'
 
 export type UseDashboardDataReturn = {
@@ -25,7 +23,6 @@ export type UseDashboardDataReturn = {
   summary: DashboardSummary
   liveSignalsData: LiveSignal[]
   riceGradesData: RiceGrade[]
-  moistureWatchData: MoistureEntry[]
 }
 
 export function useDashboardData(): UseDashboardDataReturn {
@@ -70,11 +67,9 @@ export function useDashboardData(): UseDashboardDataReturn {
       totalSamples: dashboardResponse?.scans_processed_today ?? 0,
       onlineDevices,
       totalDevices,
-      avgMoistureContent:
-        dashboardResponse?.avg_moisture ?? analyticsResponse?.avg_moisture ?? 0,
       avgBrokenGrainPercentage:
-        dashboardResponse?.avg_broken_grains ??
-        analyticsResponse?.avg_broken_grains ??
+        dashboardResponse?.factor_averages_today.broken ??
+        analyticsResponse?.factor_averages.broken ??
         0,
     }
   }, [analyticsResponse, dashboardResponse, devices])
@@ -93,16 +88,10 @@ export function useDashboardData(): UseDashboardDataReturn {
     [analyticsResponse, dashboardResponse],
   )
 
-  const moistureWatchData = useMemo<MoistureEntry[]>(
-    () => buildMoistureWatchData(dashboardResponse?.moisture_watch),
-    [dashboardResponse],
-  )
-
   return {
     devices,
     summary,
     liveSignalsData,
     riceGradesData,
-    moistureWatchData,
   }
 }

@@ -4,11 +4,9 @@ import {
   CardHeader,
   CardTitle,
 } from '#/shared/components/ui/card'
+import { useFetch } from '#/shared/hooks/useApi'
+import type { ApiDashboardSummary } from '#/shared/api/contracts'
 import type { FleetDevice } from '../types/devices.types'
-
-type Props = {
-  devices: FleetDevice[]
-}
 
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
@@ -21,18 +19,21 @@ function MetricCard({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function DeviceMetricsBar({ devices }: Props) {
+export function DeviceMetricsBar({ devices }: { devices: FleetDevice[] }) {
+  const { data } = useFetch<ApiDashboardSummary>({
+    url: '/analytics/dashboard',
+    staleTime: 60_000,
+  })
+
+  const total = devices.length
+  const active = devices.filter((d) => d.status === 'active').length
+  const scansToday = data?.scans_processed_today ?? 0
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3">
-      <MetricCard label="Total Devices" value={String(devices.length)} />
-      <MetricCard
-        label="Online"
-        value={String(devices.filter((d) => d.status !== 'inactive').length)}
-      />
-      <MetricCard
-        label="In Maintenance"
-        value={String(devices.filter((d) => d.status === 'scanning').length)}
-      />
+      <MetricCard label="Total Devices" value={String(total)} />
+      <MetricCard label="Active Devices" value={String(active)} />
+      <MetricCard label="Scans Today" value={String(scansToday)} />
     </div>
   )
 }

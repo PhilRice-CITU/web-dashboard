@@ -37,7 +37,7 @@ export function DashboardMetricsBar({ summary }: Props) {
   const activeDevices = summary.onlineDevices
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 md:grid-cols-3">
       <SignalMetric
         label="Online edge devices"
         value={`${activeDevices}/${summary.totalDevices}`}
@@ -49,12 +49,6 @@ export function DashboardMetricsBar({ summary }: Props) {
         value={summary.totalSamples.toLocaleString()}
         footer="Across all stations"
         status="positive"
-      />
-      <SignalMetric
-        label="Average moisture"
-        value={`${summary.avgMoistureContent.toFixed(1)}%`}
-        footer="PNS target <= 14.0%"
-        status="negative"
       />
       <SignalMetric
         label="Avg broken grains"

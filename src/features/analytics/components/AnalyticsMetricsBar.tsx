@@ -28,11 +28,15 @@ function MetricCard({ label, value, helper }: MetricCardProps) {
 
 type Props = {
   samples: number
-  avgMoisture: number
-  avgScore: number
+  avgBrokenGrains: number
+  premiumShare: number
 }
 
-export function AnalyticsMetricsBar({ samples, avgMoisture, avgScore }: Props) {
+export function AnalyticsMetricsBar({
+  samples,
+  avgBrokenGrains,
+  premiumShare,
+}: Props) {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 border-b border-border">
       <MetricCard
@@ -41,14 +45,14 @@ export function AnalyticsMetricsBar({ samples, avgMoisture, avgScore }: Props) {
         helper="Aggregated from filtered timeline"
       />
       <MetricCard
-        label="Average moisture"
-        value={`${avgMoisture.toFixed(2)}%`}
-        helper="Target <= 14%"
+        label="Average broken grains"
+        value={`${avgBrokenGrains.toFixed(2)}%`}
+        helper="PNS Premium <= 5%"
       />
       <MetricCard
-        label="Weighted quality score"
-        value={avgScore.toFixed(2)}
-        helper="Planner-aligned weighted score"
+        label="Premium / Grade 1 share"
+        value={`${premiumShare.toFixed(1)}%`}
+        helper="Top-tier samples"
       />
     </div>
   )
