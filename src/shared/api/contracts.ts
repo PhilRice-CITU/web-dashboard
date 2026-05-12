@@ -87,6 +87,7 @@ export interface ApiPerGrain {
   grain_id: number
   class_label: string
   bbox: [number, number, number, number] | null
+  bbox_norm?: [number, number, number, number] | null
   confidence?: number
   length_mm?: number | null
   width_mm?: number | null
@@ -143,7 +144,7 @@ export interface ApiResultImageSignedUrl {
   expires_in: number
 }
 
-export type ResultImageVariant = 'raw' | 'ir' | 'annotated'
+export type ResultImageVariant = 'raw' | 'ir' | 'annotated' | 'annotated_ir'
 
 export interface ApiGrainEdit {
   grain_id: number

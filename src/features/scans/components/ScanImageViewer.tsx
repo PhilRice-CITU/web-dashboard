@@ -12,7 +12,7 @@ type Props = {
   onSelectGrain: (grainId: number | null) => void
 }
 
-const TABS: ResultImageVariant[] = ['raw', 'ir', 'annotated']
+const TABS: ResultImageVariant[] = ['raw', 'ir', 'annotated', 'annotated_ir']
 
 export function ScanImageViewer({
   resultId,
@@ -26,14 +26,7 @@ export function ScanImageViewer({
     null,
   )
 
-  // Annotated overlays render on top of the raw image, so fetch raw for that tab.
-  const sourceVariant: ResultImageVariant =
-    variant === 'annotated' ? 'raw' : variant
-  const {
-    data: image,
-    isLoading,
-    error,
-  } = useScanImage(resultId, sourceVariant)
+  const { data: image, isLoading, error } = useScanImage(resultId, variant)
 
   useEffect(() => {
     setImageSize(null)
@@ -50,10 +43,17 @@ export function ScanImageViewer({
             variant={variant === tab ? 'default' : 'outline'}
             onClick={() => {
               setVariant(tab)
-              if (tab !== 'annotated') onSelectGrain(null)
+              if (tab !== 'annotated' && tab !== 'annotated_ir')
+                onSelectGrain(null)
             }}
           >
-            {tab === 'raw' ? 'Raw' : tab === 'ir' ? 'IR' : 'Annotated'}
+            {tab === 'raw'
+              ? 'Raw'
+              : tab === 'ir'
+                ? 'IR'
+                : tab === 'annotated'
+                  ? 'Annotated'
+                  : 'Annotated IR'}
           </Button>
         ))}
       </div>
@@ -86,14 +86,15 @@ export function ScanImageViewer({
             }}
           />
         )}
-        {variant === 'annotated' && imageSize && (
-          <BBoxOverlay
-            perGrain={perGrain}
-            imageSize={imageSize}
-            selectedGrainId={selectedGrainId}
-            onSelectGrain={onSelectGrain}
-          />
-        )}
+        {(variant === 'annotated' || variant === 'annotated_ir') &&
+          imageSize && (
+            <BBoxOverlay
+              perGrain={perGrain}
+              imageSize={imageSize}
+              selectedGrainId={selectedGrainId}
+              onSelectGrain={onSelectGrain}
+            />
+          )}
       </div>
     </div>
   )
@@ -119,8 +120,15 @@ function BBoxOverlay({
       preserveAspectRatio="none"
     >
       {perGrain.map((grain) => {
-        if (!grain.bbox) return null
-        const [x1, y1, x2, y2] = grain.bbox
+        if (!grain.bbox_norm && !grain.bbox) return null
+        const rawBbox = grain.bbox_norm ?? grain.bbox
+        if (!rawBbox) return null
+        const [bx1, by1, bx2, by2] = rawBbox
+        const isNorm = grain.bbox_norm != null
+        const x1 = isNorm ? bx1 * imageSize.w : bx1
+        const y1 = isNorm ? by1 * imageSize.h : by1
+        const x2 = isNorm ? bx2 * imageSize.w : bx2
+        const y2 = isNorm ? by2 * imageSize.h : by2
         const color = CLASS_COLORS[grain.class_label] ?? DEFAULT_CLASS_COLOR
         const isSelected = selectedGrainId === grain.grain_id
         return (

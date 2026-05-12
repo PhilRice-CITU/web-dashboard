@@ -78,6 +78,9 @@ export function useApplyGrainCorrections(resultId: string) {
       queryClient.invalidateQueries({
         queryKey: IMAGE_KEY(resultId, 'annotated'),
       })
+      queryClient.invalidateQueries({
+        queryKey: IMAGE_KEY(resultId, 'annotated_ir'),
+      })
     },
   })
 }
