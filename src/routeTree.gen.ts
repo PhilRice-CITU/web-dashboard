@@ -17,15 +17,15 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCompleteProfileRouteImport } from './routes/auth.complete-profile'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedTestGradingRouteImport } from './routes/_authenticated/test-grading'
 import { Route as AuthenticatedSuggestionsRouteImport } from './routes/_authenticated/suggestions'
-import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/logs'
-import { Route as AuthenticatedImagesRouteImport } from './routes/_authenticated/images'
+import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedDocsRouteImport } from './routes/_authenticated/docs'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedScansScanIdRouteImport } from './routes/_authenticated/scans.$scanId'
-import { Route as AuthenticatedDevicesDeviceIdRouteImport } from './routes/_authenticated/devices.$deviceId'
+import { Route as AuthenticatedDevicesDeviceIdRouteImport } from './routes/_authenticated/devices_.$deviceId'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -66,20 +66,21 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTestGradingRoute =
+  AuthenticatedTestGradingRouteImport.update({
+    id: '/test-grading',
+    path: '/test-grading',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuggestionsRoute =
   AuthenticatedSuggestionsRouteImport.update({
     id: '/suggestions',
     path: '/suggestions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedLogsRoute = AuthenticatedLogsRouteImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedImagesRoute = AuthenticatedImagesRouteImport.update({
-  id: '/images',
-  path: '/images',
+const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDocsRoute = AuthenticatedDocsRouteImport.update({
@@ -110,9 +111,9 @@ const AuthenticatedScansScanIdRoute =
   } as any)
 const AuthenticatedDevicesDeviceIdRoute =
   AuthenticatedDevicesDeviceIdRouteImport.update({
-    id: '/$deviceId',
-    path: '/$deviceId',
-    getParentRoute: () => AuthenticatedDevicesRoute,
+    id: '/devices_/$deviceId',
+    path: '/devices/$deviceId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -123,11 +124,11 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/devices': typeof AuthenticatedDevicesRouteWithChildren
+  '/devices': typeof AuthenticatedDevicesRoute
   '/docs': typeof AuthenticatedDocsRoute
-  '/images': typeof AuthenticatedImagesRoute
-  '/logs': typeof AuthenticatedLogsRoute
+  '/results': typeof AuthenticatedResultsRoute
   '/suggestions': typeof AuthenticatedSuggestionsRoute
+  '/test-grading': typeof AuthenticatedTestGradingRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
   '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
@@ -141,11 +142,11 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/devices': typeof AuthenticatedDevicesRouteWithChildren
+  '/devices': typeof AuthenticatedDevicesRoute
   '/docs': typeof AuthenticatedDocsRoute
-  '/images': typeof AuthenticatedImagesRoute
-  '/logs': typeof AuthenticatedLogsRoute
+  '/results': typeof AuthenticatedResultsRoute
   '/suggestions': typeof AuthenticatedSuggestionsRoute
+  '/test-grading': typeof AuthenticatedTestGradingRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
   '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
@@ -161,14 +162,14 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/devices': typeof AuthenticatedDevicesRouteWithChildren
+  '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/docs': typeof AuthenticatedDocsRoute
-  '/_authenticated/images': typeof AuthenticatedImagesRoute
-  '/_authenticated/logs': typeof AuthenticatedLogsRoute
+  '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/suggestions': typeof AuthenticatedSuggestionsRoute
+  '/_authenticated/test-grading': typeof AuthenticatedTestGradingRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
-  '/_authenticated/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
+  '/_authenticated/devices_/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
   '/_authenticated/scans/$scanId': typeof AuthenticatedScansScanIdRoute
 }
 export interface FileRouteTypes {
@@ -183,9 +184,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/docs'
-    | '/images'
-    | '/logs'
+    | '/results'
     | '/suggestions'
+    | '/test-grading'
     | '/auth/callback'
     | '/auth/complete-profile'
     | '/devices/$deviceId'
@@ -201,9 +202,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/docs'
-    | '/images'
-    | '/logs'
+    | '/results'
     | '/suggestions'
+    | '/test-grading'
     | '/auth/callback'
     | '/auth/complete-profile'
     | '/devices/$deviceId'
@@ -220,12 +221,12 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
     | '/_authenticated/docs'
-    | '/_authenticated/images'
-    | '/_authenticated/logs'
+    | '/_authenticated/results'
     | '/_authenticated/suggestions'
+    | '/_authenticated/test-grading'
     | '/auth/callback'
     | '/auth/complete-profile'
-    | '/_authenticated/devices/$deviceId'
+    | '/_authenticated/devices_/$deviceId'
     | '/_authenticated/scans/$scanId'
   fileRoutesById: FileRoutesById
 }
@@ -298,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/test-grading': {
+      id: '/_authenticated/test-grading'
+      path: '/test-grading'
+      fullPath: '/test-grading'
+      preLoaderRoute: typeof AuthenticatedTestGradingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/suggestions': {
       id: '/_authenticated/suggestions'
       path: '/suggestions'
@@ -305,18 +313,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuggestionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/logs': {
-      id: '/_authenticated/logs'
-      path: '/logs'
-      fullPath: '/logs'
-      preLoaderRoute: typeof AuthenticatedLogsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/images': {
-      id: '/_authenticated/images'
-      path: '/images'
-      fullPath: '/images'
-      preLoaderRoute: typeof AuthenticatedImagesRouteImport
+    '/_authenticated/results': {
+      id: '/_authenticated/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof AuthenticatedResultsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/docs': {
@@ -354,46 +355,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScansScanIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/devices/$deviceId': {
-      id: '/_authenticated/devices/$deviceId'
-      path: '/$deviceId'
+    '/_authenticated/devices_/$deviceId': {
+      id: '/_authenticated/devices_/$deviceId'
+      path: '/devices/$deviceId'
       fullPath: '/devices/$deviceId'
       preLoaderRoute: typeof AuthenticatedDevicesDeviceIdRouteImport
-      parentRoute: typeof AuthenticatedDevicesRoute
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
 
-interface AuthenticatedDevicesRouteChildren {
-  AuthenticatedDevicesDeviceIdRoute: typeof AuthenticatedDevicesDeviceIdRoute
-}
-
-const AuthenticatedDevicesRouteChildren: AuthenticatedDevicesRouteChildren = {
-  AuthenticatedDevicesDeviceIdRoute: AuthenticatedDevicesDeviceIdRoute,
-}
-
-const AuthenticatedDevicesRouteWithChildren =
-  AuthenticatedDevicesRoute._addFileChildren(AuthenticatedDevicesRouteChildren)
-
 interface AuthenticatedRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRouteWithChildren
+  AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedDocsRoute: typeof AuthenticatedDocsRoute
-  AuthenticatedImagesRoute: typeof AuthenticatedImagesRoute
-  AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
+  AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedSuggestionsRoute: typeof AuthenticatedSuggestionsRoute
+  AuthenticatedTestGradingRoute: typeof AuthenticatedTestGradingRoute
+  AuthenticatedDevicesDeviceIdRoute: typeof AuthenticatedDevicesDeviceIdRoute
   AuthenticatedScansScanIdRoute: typeof AuthenticatedScansScanIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedDevicesRoute: AuthenticatedDevicesRouteWithChildren,
+  AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedDocsRoute: AuthenticatedDocsRoute,
-  AuthenticatedImagesRoute: AuthenticatedImagesRoute,
-  AuthenticatedLogsRoute: AuthenticatedLogsRoute,
+  AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedSuggestionsRoute: AuthenticatedSuggestionsRoute,
+  AuthenticatedTestGradingRoute: AuthenticatedTestGradingRoute,
+  AuthenticatedDevicesDeviceIdRoute: AuthenticatedDevicesDeviceIdRoute,
   AuthenticatedScansScanIdRoute: AuthenticatedScansScanIdRoute,
 }
 

@@ -9,7 +9,7 @@ export function CorrectionHistory({ resultId }: Props) {
   if (isLoading) {
     return <p className="text-xs text-muted-foreground">Loading history…</p>
   }
-  if (!data || data.count === 0) {
+  if (!data || !data.data || data.count === 0) {
     return (
       <p className="text-xs text-muted-foreground">
         No corrections recorded for this scan.

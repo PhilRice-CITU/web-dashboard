@@ -86,7 +86,7 @@ export interface ApiResultImagesListResponse {
 export interface ApiPerGrain {
   grain_id: number
   class_label: string
-  bbox: [number, number, number, number]
+  bbox: [number, number, number, number] | null
   confidence?: number
   length_mm?: number | null
   width_mm?: number | null
@@ -128,7 +128,7 @@ export interface ApiResult {
   device_id: string
   operator_name: string | null
   rice_variety: string | null
-  metrics: ApiResultMetrics
+  metrics: ApiResultMetrics | null
   status: 'pending' | 'processing' | 'graded' | 'failed' | 'corrected' | null
   grading_error: string | null
   graded_at: string | null
@@ -169,7 +169,7 @@ export interface ApiCorrectionHistoryItem {
 }
 
 export interface ApiCorrectionHistoryResponse {
-  data: ApiCorrectionHistoryItem[]
+  data: ApiCorrectionHistoryItem[] | null
   count: number
 }
 

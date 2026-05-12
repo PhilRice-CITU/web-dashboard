@@ -7,6 +7,7 @@ import { GradeOverrideDialog } from '#/features/scans/components/GradeOverrideDi
 import { GradingBreakdown } from '#/features/scans/components/GradingBreakdown'
 import { GrainCorrectionPanel } from '#/features/scans/components/GrainCorrectionPanel'
 import { ScanImageViewer } from '#/features/scans/components/ScanImageViewer'
+import { PnsThresholdTable } from '#/features/scans/components/PnsThresholdTable'
 import { useScanDetail } from '#/features/scans/hooks/useScanDetail'
 import { Badge } from '#/shared/components/ui/badge'
 import { Button } from '#/shared/components/ui/button'
@@ -22,11 +23,9 @@ export function ScanDetailPage() {
       title="Scan detail"
       description={scanId}
       actions={
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/images">
-            <ArrowLeft className="mr-1 size-4" />
-            Back
-          </Link>
+        <Button variant="ghost" size="sm" render={<Link to="/results" />}>
+          <ArrowLeft className="mr-1 size-4" />
+          Back to results
         </Button>
       }
     >
@@ -63,7 +62,7 @@ function ScanDetailBody({
 }: BodyProps) {
   const status = result.status ?? 'pending'
   const isReady = status === 'graded' || status === 'corrected'
-  const perGrain = result.metrics.perGrain ?? []
+  const perGrain = result.metrics?.perGrain ?? []
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)]">
@@ -89,7 +88,7 @@ function ScanDetailBody({
           >
             {status}
           </Badge>
-          {isReady && (
+          {isReady && result.metrics && (
             <GradeOverrideDialog
               resultId={resultId}
               currentGrade={result.metrics.rawGrade}
@@ -109,9 +108,10 @@ function ScanDetailBody({
           </p>
         )}
 
-        {isReady && (
+        {isReady && result.metrics && (
           <>
             <GradingBreakdown result={result} />
+            <PnsThresholdTable metrics={result.metrics} />
             <GrainCorrectionPanel
               resultId={resultId}
               perGrain={perGrain}

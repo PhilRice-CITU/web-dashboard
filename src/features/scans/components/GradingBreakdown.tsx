@@ -5,6 +5,7 @@ type Props = { result: ApiResult }
 
 export function GradingBreakdown({ result }: Props) {
   const m = result.metrics
+  if (!m) return null
   const params = m.parameters ?? {}
 
   return (

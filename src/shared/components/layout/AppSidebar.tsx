@@ -15,9 +15,8 @@ import {
 import {
   BotIcon,
   BookOpenIcon,
-  CommandIcon,
-  FileClockIcon,
-  FolderOpenIcon,
+  ClipboardCheckIcon,
+  FlaskConicalIcon,
   MessageSquareIcon,
   PieChartIcon,
 } from 'lucide-react'
@@ -25,9 +24,9 @@ import { useCurrentUser } from '#/features/auth/hooks/useCurrentUser'
 
 const navMain = [
   {
-    title: 'Operations',
-    url: '/dashboard',
-    icon: <CommandIcon />,
+    title: 'Results',
+    url: '/results',
+    icon: <ClipboardCheckIcon />,
   },
   {
     title: 'Devices',
@@ -35,19 +34,14 @@ const navMain = [
     icon: <BotIcon />,
   },
   {
-    title: 'Images',
-    url: '/images',
-    icon: <FolderOpenIcon />,
-  },
-  {
     title: 'Analytics',
     url: '/analytics',
     icon: <PieChartIcon />,
   },
   {
-    title: 'Logs',
-    url: '/logs',
-    icon: <FileClockIcon />,
+    title: 'Test Grading',
+    url: '/test-grading',
+    icon: <FlaskConicalIcon />,
   },
 ]
 
@@ -72,7 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<a href="/dashboard" />}>
+            <SidebarMenuButton size="lg" render={<a href="/results" />}>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
                 <img
                   src="/logo-icon.svg"

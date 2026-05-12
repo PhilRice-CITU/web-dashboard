@@ -8,28 +8,21 @@ import { useRegions } from '#/features/devices/hooks/useRegions'
 import { DeviceInfoCard } from '#/features/devices/components/DeviceInfoCard'
 import { DeviceStatsRow } from '#/features/devices/components/DeviceStatsRow'
 import { DeviceResultsTable } from '#/features/devices/components/DeviceResultsTable'
-
-type DeviceDetail = {
-  id: string
-  display_name: string
-  status: string
-  region_id: string
-  last_seen: string | null
-  created_at: string
-}
+import { DeviceEventsPanel } from '#/features/devices/components/DeviceEventsPanel'
+import type { ApiDevice } from '#/shared/api/contracts'
 
 export function DevicePage() {
-  const { deviceId } = useParams({ from: '/_authenticated/devices/$deviceId' })
+  const { deviceId } = useParams({ from: '/_authenticated/devices_/$deviceId' })
 
   const {
     data: device,
     isLoading,
     isError,
-  } = useQuery<DeviceDetail>({
+  } = useQuery<ApiDevice>({
     queryKey: ['device', deviceId],
     queryFn: async () => {
-      const res = await httpClient.get<DeviceDetail>(`/devices/${deviceId}`)
-      return res.data
+      const { data } = await httpClient.get<ApiDevice>(`/devices/${deviceId}`)
+      return data
     },
     staleTime: 30_000,
   })
@@ -81,6 +74,10 @@ export function DevicePage() {
               lastScanAt={device.last_seen}
             />
             <DeviceResultsTable deviceId={device.id} />
+            <section className="space-y-3">
+              <h2 className="text-base font-semibold">Device events</h2>
+              <DeviceEventsPanel deviceId={device.id} />
+            </section>
           </>
         )}
       </div>

@@ -1,9 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { DashboardPage } from '#/pages/DashboardPage'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
-  head: () => ({
-    meta: [{ title: 'hum.ai | Platform' }],
-  }),
-  component: DashboardPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/results' })
+  },
 })

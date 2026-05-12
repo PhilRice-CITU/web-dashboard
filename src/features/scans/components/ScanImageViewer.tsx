@@ -119,6 +119,7 @@ function BBoxOverlay({
       preserveAspectRatio="none"
     >
       {perGrain.map((grain) => {
+        if (!grain.bbox) return null
         const [x1, y1, x2, y2] = grain.bbox
         const color = CLASS_COLORS[grain.class_label] ?? DEFAULT_CLASS_COLOR
         const isSelected = selectedGrainId === grain.grain_id

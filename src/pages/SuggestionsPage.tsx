@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import { PlatformShell } from '#/shared/components/layout/PlatformShell'
 import { Button } from '#/shared/components/ui/button'
+import { Skeleton } from '#/shared/components/ui/skeleton'
 import {
   Card,
   CardContent,
@@ -148,7 +149,11 @@ export function SuggestionsPage() {
               ).response?.data?.detail ?? fetchError.message}
             </div>
           ) : isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full rounded-xl" />
+              ))}
+            </div>
           ) : !suggestions?.length ? (
             <p className="text-sm text-muted-foreground">
               No suggestions yet. Be the first!
