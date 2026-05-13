@@ -4,7 +4,7 @@ import { useOverrideGrade } from '#/features/scans/hooks/useScanDetail'
 import { PNS_GRADES } from '#/features/scans/types'
 import type { PnsGrade } from '#/features/scans/types'
 import { axiosErrorDetail } from '#/features/scans/utils'
-import { Button } from '#/shared/components/ui/button'
+import { Button, buttonVariants } from '#/shared/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -57,10 +57,14 @@ export function GradeOverrideDialog({ resultId, currentGrade }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Override grade
-        </Button>
+      <DialogTrigger
+        render={
+          <button
+            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+          />
+        }
+      >
+        Override grade
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
