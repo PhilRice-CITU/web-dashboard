@@ -146,6 +146,14 @@ export interface ApiResultImageSignedUrl {
 
 export type ResultImageVariant = 'raw' | 'ir' | 'annotated' | 'annotated_ir'
 
+export interface ApiBatchImages {
+  batch: number
+  raw?: string | null
+  ir?: string | null
+  annotated?: string | null
+  annotated_ir?: string | null
+}
+
 export interface ApiGrainEdit {
   grain_id: number
   to_class: string

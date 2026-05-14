@@ -3,6 +3,7 @@ import type { AxiosError } from 'axios'
 
 import { httpClient } from '#/shared/api/client'
 import type {
+  ApiBatchImages,
   ApiCorrectionHistoryResponse,
   ApiGradeOverrideRequest,
   ApiGrainCorrectionRequest,
@@ -14,6 +15,7 @@ import type {
 const RESULT_KEY = (id: string) => ['result', id] as const
 const IMAGE_KEY = (id: string, variant: ResultImageVariant) =>
   ['result', id, 'image', variant] as const
+const BATCH_IMAGES_KEY = (id: string) => ['result', id, 'batch-images'] as const
 const HISTORY_KEY = (id: string) => ['result', id, 'corrections'] as const
 
 const PROCESSING_REFETCH_MS = 4000
@@ -32,6 +34,20 @@ export function useScanDetail(resultId: string) {
         ? PROCESSING_REFETCH_MS
         : false
     },
+  })
+}
+
+export function useScanBatchImages(resultId: string) {
+  return useQuery({
+    queryKey: BATCH_IMAGES_KEY(resultId),
+    queryFn: async () => {
+      const { data } = await httpClient.get<ApiBatchImages[]>(
+        `/results/${resultId}/batch-images`,
+      )
+      return data
+    },
+    staleTime: (SIGNED_URL_EXPIRES_IN - 120) * 1000,
+    retry: false,
   })
 }
 

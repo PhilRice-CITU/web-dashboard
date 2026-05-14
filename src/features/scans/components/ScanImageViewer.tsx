@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 
-import { useScanImage } from '#/features/scans/hooks/useScanDetail'
+import { BatchImageGallery } from '#/features/scans/components/BatchImageGallery'
+import { useScanBatchImages } from '#/features/scans/hooks/useScanDetail'
 import { CLASS_COLORS, DEFAULT_CLASS_COLOR } from '#/features/scans/types'
 import type { ApiPerGrain, ResultImageVariant } from '#/shared/api/contracts'
 import { Button } from '#/shared/components/ui/button'
@@ -14,6 +15,13 @@ type Props = {
 
 const TABS: ResultImageVariant[] = ['raw', 'ir', 'annotated', 'annotated_ir']
 
+const TAB_LABELS: Record<ResultImageVariant, string> = {
+  raw: 'Raw',
+  ir: 'IR',
+  annotated: 'Annotated',
+  annotated_ir: 'Annotated IR',
+}
+
 export function ScanImageViewer({
   resultId,
   perGrain,
@@ -21,16 +29,56 @@ export function ScanImageViewer({
   onSelectGrain,
 }: Props) {
   const [variant, setVariant] = useState<ResultImageVariant>('annotated')
-  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Raw and IR share the same selected batch index.
+  const [rawIrBatch, setRawIrBatch] = useState(0)
+  // Annotated and Annotated IR share a separate selected batch index.
+  const [annotatedBatch, setAnnotatedBatch] = useState(0)
+
   const [imageSize, setImageSize] = useState<{ w: number; h: number } | null>(
     null,
   )
 
-  const { data: image, isLoading, error } = useScanImage(resultId, variant)
+  const { data: batches, isLoading, error } = useScanBatchImages(resultId)
 
-  useEffect(() => {
-    setImageSize(null)
-  }, [image?.signed_url])
+  const rawUrls =
+    batches?.map((b) => b.raw).filter((u): u is string => !!u) ?? []
+  const irUrls = batches?.map((b) => b.ir).filter((u): u is string => !!u) ?? []
+  const annotatedUrls =
+    batches?.map((b) => b.annotated).filter((u): u is string => !!u) ?? []
+  const annotatedIrUrls =
+    batches?.map((b) => b.annotated_ir).filter((u): u is string => !!u) ?? []
+
+  const urlsForTab: Record<ResultImageVariant, string[]> = {
+    raw: rawUrls,
+    ir: irUrls,
+    annotated: annotatedUrls,
+    annotated_ir: annotatedIrUrls,
+  }
+
+  const selectedIndexForTab: Record<ResultImageVariant, number> = {
+    raw: rawIrBatch,
+    ir: rawIrBatch,
+    annotated: annotatedBatch,
+    annotated_ir: annotatedBatch,
+  }
+
+  const onSelectForTab: Record<ResultImageVariant, (i: number) => void> = {
+    raw: setRawIrBatch,
+    ir: setRawIrBatch,
+    annotated: (i) => {
+      setAnnotatedBatch(i)
+      setImageSize(null)
+    },
+    annotated_ir: (i) => {
+      setAnnotatedBatch(i)
+      setImageSize(null)
+    },
+  }
+
+  const currentUrls = urlsForTab[variant]
+  const currentIndex = selectedIndexForTab[variant]
+  const isAnnotated = variant === 'annotated' || variant === 'annotated_ir'
 
   return (
     <div className="flex flex-col gap-3">
@@ -43,59 +91,53 @@ export function ScanImageViewer({
             variant={variant === tab ? 'default' : 'outline'}
             onClick={() => {
               setVariant(tab)
-              if (tab !== 'annotated' && tab !== 'annotated_ir')
-                onSelectGrain(null)
+              if (!isAnnotated) onSelectGrain(null)
             }}
           >
-            {tab === 'raw'
-              ? 'Raw'
-              : tab === 'ir'
-                ? 'IR'
-                : tab === 'annotated'
-                  ? 'Annotated'
-                  : 'Annotated IR'}
+            {TAB_LABELS[tab]}
           </Button>
         ))}
       </div>
 
-      <div
-        ref={containerRef}
-        className="relative w-full overflow-hidden rounded-lg border border-border bg-black"
-      >
-        {isLoading && (
-          <div className="flex h-96 items-center justify-center text-sm text-muted-foreground">
-            Loading image…
-          </div>
-        )}
-        {error && (
-          <div className="flex h-96 items-center justify-center px-6 text-center text-sm text-destructive">
-            Image not available yet.
-          </div>
-        )}
-        {image && (
-          <img
-            src={image.signed_url}
-            alt={`${variant} scan`}
-            className="block w-full"
-            onLoad={(e) => {
-              const img = e.currentTarget
-              setImageSize({
-                w: img.naturalWidth,
-                h: img.naturalHeight,
-              })
-            }}
-          />
-        )}
-        {(variant === 'annotated' || variant === 'annotated_ir') &&
-          imageSize && (
-            <BBoxOverlay
-              perGrain={perGrain}
-              imageSize={imageSize}
-              selectedGrainId={selectedGrainId}
-              onSelectGrain={onSelectGrain}
-            />
-          )}
-      </div>
+      {isLoading && (
+        <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-black text-sm text-muted-foreground">
+          Loading images…
+        </div>
+      )}
+
+      {error && (
+        <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-black px-6 text-center text-sm text-destructive">
+          Images not available yet.
+        </div>
+      )}
+
+      {!isLoading && !error && currentUrls.length === 0 && (
+        <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-black text-sm text-muted-foreground">
+          No images for this tab yet.
+        </div>
+      )}
+
+      {!isLoading && !error && currentUrls.length > 0 && (
+        <BatchImageGallery
+          images={currentUrls}
+          selectedIndex={Math.min(currentIndex, currentUrls.length - 1)}
+          onSelect={onSelectForTab[variant]}
+          alt={TAB_LABELS[variant]}
+          onImageLoad={(w, h) => {
+            if (isAnnotated) setImageSize({ w, h })
+          }}
+          overlay={
+            isAnnotated && imageSize ? (
+              <BBoxOverlay
+                perGrain={perGrain}
+                imageSize={imageSize}
+                selectedGrainId={selectedGrainId}
+                onSelectGrain={onSelectGrain}
+              />
+            ) : null
+          }
+        />
+      )}
     </div>
   )
 }
