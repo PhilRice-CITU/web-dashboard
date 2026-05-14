@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+
+import { cn } from '#/shared/lib/utils'
 
 type Props = {
   images: string[]
@@ -8,6 +10,7 @@ type Props = {
   alt?: string
   onImageLoad?: (naturalWidth: number, naturalHeight: number) => void
   overlay?: React.ReactNode
+  variantLabel?: string
 }
 
 const THUMB_SIZE = 72
@@ -20,10 +23,21 @@ export function BatchImageGallery({
   alt = 'scan image',
   onImageLoad,
   overlay,
+  variantLabel,
 }: Props) {
   const stripRef = useRef<HTMLDivElement>(null)
+  const [prevUrl, setPrevUrl] = useState<string | null>(null)
+  const [currentUrl, setCurrentUrl] = useState<string>(images[selectedIndex])
 
-  // Keep selected thumbnail visible when index changes externally.
+  useEffect(() => {
+    const next = images[selectedIndex]
+    if (next === currentUrl) return
+    setPrevUrl(currentUrl)
+    setCurrentUrl(next)
+    const t = window.setTimeout(() => setPrevUrl(null), 200)
+    return () => window.clearTimeout(t)
+  }, [images, selectedIndex, currentUrl])
+
   useEffect(() => {
     const el = stripRef.current?.children[selectedIndex] as
       | HTMLElement
@@ -35,7 +49,7 @@ export function BatchImageGallery({
     const strip = stripRef.current
     if (!strip) return
     const delta =
-      THUMBS_PER_SCROLL * (THUMB_SIZE + 4) * (direction === 'down' ? 1 : -1)
+      THUMBS_PER_SCROLL * (THUMB_SIZE + 8) * (direction === 'down' ? 1 : -1)
     strip.scrollBy({ top: delta, behavior: 'smooth' })
   }
 
@@ -52,89 +66,99 @@ export function BatchImageGallery({
   const showStrip = images.length > 1
 
   return (
-    <div className="flex gap-2 w-full">
+    <div className="flex gap-3 w-full">
       {showStrip && (
         <div
-          className="flex flex-col items-center gap-1 flex-shrink-0"
+          className="flex flex-col items-center gap-1.5 shrink-0"
           style={{ width: THUMB_SIZE + 4 }}
         >
           <button
             type="button"
-            className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => scrollStrip('up')}
             aria-label="Scroll thumbnails up"
           >
-            <ChevronUp size={16} />
+            <ChevronUp size={18} />
           </button>
 
           <div
             ref={stripRef}
-            className="flex flex-col gap-1 overflow-y-auto"
-            style={{ maxHeight: 6 * (THUMB_SIZE + 4), scrollbarWidth: 'none' }}
+            className="flex flex-col gap-2 overflow-y-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ maxHeight: 6 * (THUMB_SIZE + 8) }}
           >
-            {images.map((url, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => onSelect(i)}
-                className="flex-shrink-0 rounded overflow-hidden focus:outline-none"
-                style={{
-                  width: THUMB_SIZE,
-                  height: THUMB_SIZE,
-                  border:
-                    i === selectedIndex
-                      ? '2px solid hsl(var(--primary))'
-                      : '2px solid transparent',
-                  opacity: i === selectedIndex ? 1 : 0.55,
-                  transition: 'border-color 0.15s, opacity 0.15s',
-                }}
-                aria-label={`Batch ${i + 1}`}
-                aria-current={i === selectedIndex}
-              >
-                <img
-                  src={url}
-                  alt={`Batch ${i + 1} thumbnail`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
+            {images.map((url, i) => {
+              const selected = i === selectedIndex
+              return (
+                <button
+                  key={`${i}-${url}`}
+                  type="button"
+                  onClick={() => onSelect(i)}
+                  className={cn(
+                    'group shrink-0 overflow-hidden rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    selected
+                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background opacity-100 scale-100'
+                      : 'opacity-55 hover:opacity-100 hover:scale-105 ring-1 ring-border',
+                  )}
+                  style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
+                  aria-label={`Batch ${i + 1}`}
+                  aria-current={selected}
+                >
+                  <img
+                    src={url}
+                    alt={`Batch ${i + 1} thumbnail`}
+                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-110"
+                  />
+                </button>
+              )
+            })}
           </div>
 
           <button
             type="button"
-            className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => scrollStrip('down')}
             aria-label="Scroll thumbnails down"
           >
-            <ChevronDown size={16} />
+            <ChevronDown size={18} />
           </button>
         </div>
       )}
 
-      <div className="flex flex-col flex-1 gap-1 min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div
-          className="relative w-full overflow-hidden rounded-lg border border-border bg-black focus:outline-none"
+          className="relative w-full overflow-hidden rounded-2xl border border-border bg-black shadow-sm ring-1 ring-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           tabIndex={0}
           onKeyDown={handleKeyDown}
           aria-label={`${alt}, use arrow keys to navigate batches`}
         >
+          {prevUrl && (
+            <img
+              key={`prev-${prevUrl}`}
+              src={prevUrl}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 block w-full opacity-0 transition-opacity duration-200"
+            />
+          )}
           <img
-            src={images[selectedIndex]}
+            key={`current-${currentUrl}`}
+            src={currentUrl}
             alt={`${alt} batch ${selectedIndex + 1}`}
-            className="block w-full"
+            className="block w-full opacity-0 transition-opacity duration-200 [&.loaded]:opacity-100"
             onLoad={(e) => {
               const img = e.currentTarget
+              img.classList.add('loaded')
               onImageLoad?.(img.naturalWidth, img.naturalHeight)
             }}
           />
           {overlay}
+          {showStrip && (
+            <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+              {variantLabel ? `${variantLabel} · ` : ''}Batch{' '}
+              {selectedIndex + 1} / {images.length}
+            </div>
+          )}
         </div>
-
-        {showStrip && (
-          <p className="text-xs text-muted-foreground text-right pr-1">
-            Batch {selectedIndex + 1} of {images.length}
-          </p>
-        )}
       </div>
     </div>
   )

@@ -29,7 +29,7 @@ export function ScanDetailPage() {
         </Button>
       }
     >
-      <div className="px-4 py-6 md:px-6">
+      <div className="mx-auto w-full max-w-350 px-4 py-6 md:px-6">
         {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
         {error && (
           <p className="text-sm text-destructive">Failed to load scan.</p>
@@ -65,17 +65,19 @@ function ScanDetailBody({
   const perGrain = result.metrics?.perGrain ?? []
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)]">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
       <section className="space-y-4">
-        <ScanImageViewer
-          resultId={resultId}
-          perGrain={perGrain}
-          selectedGrainId={selectedGrainId}
-          onSelectGrain={onSelectGrain}
-        />
+        <div className="mx-auto w-full max-w-3xl">
+          <ScanImageViewer
+            resultId={resultId}
+            perGrain={perGrain}
+            selectedGrainId={selectedGrainId}
+            onSelectGrain={onSelectGrain}
+          />
+        </div>
       </section>
 
-      <aside className="space-y-6">
+      <aside className="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1">
         <div className="flex items-center gap-2">
           <Badge
             variant={

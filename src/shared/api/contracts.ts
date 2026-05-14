@@ -93,6 +93,7 @@ export interface ApiPerGrain {
   width_mm?: number | null
   area_px?: number | null
   grain_size_class?: string
+  batch_number?: number
 }
 
 export type PnsGradeName =

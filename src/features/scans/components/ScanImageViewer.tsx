@@ -4,7 +4,7 @@ import { BatchImageGallery } from '#/features/scans/components/BatchImageGallery
 import { useScanBatchImages } from '#/features/scans/hooks/useScanDetail'
 import { CLASS_COLORS, DEFAULT_CLASS_COLOR } from '#/features/scans/types'
 import type { ApiPerGrain, ResultImageVariant } from '#/shared/api/contracts'
-import { Button } from '#/shared/components/ui/button'
+import { Tabs, TabsList, TabsTab } from '#/shared/components/ui/tabs'
 
 type Props = {
   resultId: string
@@ -30,9 +30,7 @@ export function ScanImageViewer({
 }: Props) {
   const [variant, setVariant] = useState<ResultImageVariant>('annotated')
 
-  // Raw and IR share the same selected batch index.
   const [rawIrBatch, setRawIrBatch] = useState(0)
-  // Annotated and Annotated IR share a separate selected batch index.
   const [annotatedBatch, setAnnotatedBatch] = useState(0)
 
   const [imageSize, setImageSize] = useState<{ w: number; h: number } | null>(
@@ -77,66 +75,87 @@ export function ScanImageViewer({
   }
 
   const currentUrls = urlsForTab[variant]
-  const currentIndex = selectedIndexForTab[variant]
+  const currentIndex = Math.min(
+    selectedIndexForTab[variant],
+    Math.max(0, currentUrls.length - 1),
+  )
   const isAnnotated = variant === 'annotated' || variant === 'annotated_ir'
 
+  const hasBatchNumber = perGrain.some((g) => g.batch_number != null)
+  const currentBatchNumber = batches?.[currentIndex]?.batch
+  const overlayGrains =
+    isAnnotated && hasBatchNumber && currentBatchNumber != null
+      ? perGrain.filter((g) => g.batch_number === currentBatchNumber)
+      : []
+
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex gap-2">
-        {TABS.map((tab) => (
-          <Button
-            key={tab}
-            type="button"
-            size="sm"
-            variant={variant === tab ? 'default' : 'outline'}
-            onClick={() => {
-              setVariant(tab)
-              if (!isAnnotated) onSelectGrain(null)
-            }}
-          >
-            {TAB_LABELS[tab]}
-          </Button>
-        ))}
-      </div>
+    <div className="flex flex-col gap-4">
+      <Tabs
+        value={variant}
+        onValueChange={(v) => {
+          const next = v as ResultImageVariant
+          setVariant(next)
+          if (next !== 'annotated' && next !== 'annotated_ir') {
+            onSelectGrain(null)
+          }
+        }}
+      >
+        <TabsList>
+          {TABS.map((tab) => (
+            <TabsTab key={tab} value={tab}>
+              {TAB_LABELS[tab]}
+            </TabsTab>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {isLoading && (
-        <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-black text-sm text-muted-foreground">
+        <div className="flex aspect-square w-full items-center justify-center rounded-2xl border border-border bg-muted/30 text-sm text-muted-foreground">
           Loading images…
         </div>
       )}
 
       {error && (
-        <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-black px-6 text-center text-sm text-destructive">
+        <div className="flex aspect-square w-full items-center justify-center rounded-2xl border border-border bg-muted/30 px-6 text-center text-sm text-destructive">
           Images not available yet.
         </div>
       )}
 
       {!isLoading && !error && currentUrls.length === 0 && (
-        <div className="flex h-96 items-center justify-center rounded-lg border border-border bg-black text-sm text-muted-foreground">
+        <div className="flex aspect-square w-full items-center justify-center rounded-2xl border border-border bg-muted/30 text-sm text-muted-foreground">
           No images for this tab yet.
         </div>
       )}
 
       {!isLoading && !error && currentUrls.length > 0 && (
-        <BatchImageGallery
-          images={currentUrls}
-          selectedIndex={Math.min(currentIndex, currentUrls.length - 1)}
-          onSelect={onSelectForTab[variant]}
-          alt={TAB_LABELS[variant]}
-          onImageLoad={(w, h) => {
-            if (isAnnotated) setImageSize({ w, h })
-          }}
-          overlay={
-            isAnnotated && imageSize ? (
-              <BBoxOverlay
-                perGrain={perGrain}
-                imageSize={imageSize}
-                selectedGrainId={selectedGrainId}
-                onSelectGrain={onSelectGrain}
-              />
-            ) : null
-          }
-        />
+        <>
+          <BatchImageGallery
+            images={currentUrls}
+            selectedIndex={currentIndex}
+            onSelect={onSelectForTab[variant]}
+            alt={TAB_LABELS[variant]}
+            variantLabel={TAB_LABELS[variant]}
+            onImageLoad={(w, h) => {
+              if (isAnnotated) setImageSize({ w, h })
+            }}
+            overlay={
+              isAnnotated && imageSize && overlayGrains.length > 0 ? (
+                <BBoxOverlay
+                  perGrain={overlayGrains}
+                  imageSize={imageSize}
+                  selectedGrainId={selectedGrainId}
+                  onSelectGrain={onSelectGrain}
+                />
+              ) : null
+            }
+          />
+          {isAnnotated && !hasBatchNumber && (
+            <p className="text-xs text-muted-foreground">
+              Interactive grain selection unavailable for scans graded before
+              this update — the annotated image above is authoritative.
+            </p>
+          )}
+        </>
       )}
     </div>
   )
