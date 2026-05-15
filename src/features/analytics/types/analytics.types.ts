@@ -13,7 +13,6 @@ export interface AnalyticsData {
   avgBrewers: number
   avgChalkiness: number
   avgDiscoloration: number
-  avgDamaged: number
   avgRed: number
   avgLengthMm: number
 }
@@ -35,7 +34,6 @@ export type AnalyticsMetricKey =
   | 'avgBrewers'
   | 'avgChalkiness'
   | 'avgDiscoloration'
-  | 'avgDamaged'
   | 'avgRed'
   | 'avgLengthMm'
 

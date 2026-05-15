@@ -86,9 +86,17 @@ export interface ApiResultImagesListResponse {
 export interface ApiPerGrain {
   grain_id: number
   class_label: string
+  visual_class?: string
+  dimensional_class?: string
   bbox: [number, number, number, number] | null
   bbox_norm?: [number, number, number, number] | null
   confidence?: number
+  source?: string
+  normal_label?: string | null
+  normal_confidence?: number | null
+  ir_label?: string | null
+  ir_confidence?: number | null
+  fusion_reason?: string | null
   length_mm?: number | null
   width_mm?: number | null
   area_px?: number | null
@@ -109,6 +117,7 @@ export interface ApiResultMetrics {
   qualityGrade?: PnsGradeName
   totalGrains?: number
   grainSizeClass?: string
+  estimatedSizeClass?: string
   limitingFactor?: string
   brokenGrains?: number
   brewers?: number
@@ -157,7 +166,9 @@ export interface ApiBatchImages {
 
 export interface ApiGrainEdit {
   grain_id: number
-  to_class: string
+  to_class?: string | null
+  to_visual_class?: string | null
+  to_dimensional_class?: string | null
 }
 
 export interface ApiGrainCorrectionRequest {

@@ -190,7 +190,11 @@ function BBoxOverlay({
         const y1 = isNorm ? by1 * imageSize.h : by1
         const x2 = isNorm ? bx2 * imageSize.w : bx2
         const y2 = isNorm ? by2 * imageSize.h : by2
-        const color = CLASS_COLORS[grain.class_label] ?? DEFAULT_CLASS_COLOR
+        const color =
+          CLASS_COLORS[grain.class_label] ??
+          CLASS_COLORS[grain.visual_class ?? ''] ??
+          CLASS_COLORS[grain.dimensional_class ?? ''] ??
+          DEFAULT_CLASS_COLOR
         const isSelected = selectedGrainId === grain.grain_id
         return (
           <g key={grain.grain_id}>

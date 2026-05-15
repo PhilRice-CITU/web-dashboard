@@ -28,6 +28,14 @@ export function GradingBreakdown({ result }: Props) {
         <p className="text-sm text-muted-foreground">
           Total grains: {m.totalGrains ?? 0} • Size class:{' '}
           <span className="font-mono">{m.grainSizeClass ?? '—'}</span>
+          {m.estimatedSizeClass &&
+            m.estimatedSizeClass !== m.grainSizeClass && (
+              <>
+                {' '}
+                • Estimate:{' '}
+                <span className="font-mono">{m.estimatedSizeClass}</span>
+              </>
+            )}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {(m.foreignCount ?? 0) > 0 && (

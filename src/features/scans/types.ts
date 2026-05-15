@@ -1,16 +1,17 @@
-export const GRAIN_CLASSES = [
-  'whole_clear',
+export const VISUAL_CLASSES = [
+  'clear',
   'chalky',
-  'broken',
-  'brewer',
-  'damaged',
   'discolored',
-  'immature',
-  'red_kernel',
-  'foreign_matter',
+  'red',
+  'foreign',
+  'paddy',
 ] as const
 
-export type GrainClass = (typeof GRAIN_CLASSES)[number]
+export type VisualClass = (typeof VISUAL_CLASSES)[number]
+
+export const DIMENSIONAL_CLASSES = ['whole', 'broken', 'brewers'] as const
+
+export type DimensionalClass = (typeof DIMENSIONAL_CLASSES)[number]
 
 export const PNS_GRADES = [
   'Premium',
@@ -25,16 +26,15 @@ export const PNS_GRADES = [
 export type PnsGrade = (typeof PNS_GRADES)[number]
 
 // Hex colors matching the BGR overlay defined in api-server/grading_service.py.
-export const CLASS_COLORS: Record<string, string> = {
-  whole_clear: '#00C800',
-  chalky: '#FFFF00',
-  broken: '#FF0000',
-  brewer: '#FF6400',
-  damaged: '#FFA500',
-  discolored: '#B400B4',
-  immature: '#C8C8C8',
-  red_kernel: '#C80000',
-  foreign_matter: '#FFFF00',
+export const CLASS_COLORS: Partial<Record<string, string>> = {
+  clear: '#3CB371',
+  chalky: '#FFAA00',
+  broken: '#F44336',
+  brewers: '#B45ADC',
+  discolored: '#1E965A',
+  red: '#DC3C3C',
+  paddy: '#13458B',
+  foreign: '#808080',
 }
 
 export const DEFAULT_CLASS_COLOR = '#FFFFFF'

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 
 import { useApplyGrainCorrections } from '#/features/scans/hooks/useScanDetail'
-import { GRAIN_CLASSES } from '#/features/scans/types'
-import type { GrainClass } from '#/features/scans/types'
+import { DIMENSIONAL_CLASSES, VISUAL_CLASSES } from '#/features/scans/types'
+import type { DimensionalClass, VisualClass } from '#/features/scans/types'
 import { axiosErrorDetail } from '#/features/scans/utils'
 import type { ApiPerGrain } from '#/shared/api/contracts'
 import { Button } from '#/shared/components/ui/button'
@@ -21,13 +21,34 @@ type Props = {
   onClearSelection: () => void
 }
 
+type PendingEdit = {
+  visual_class: VisualClass
+  dimensional_class: DimensionalClass
+}
+
+const NON_RICE = new Set<VisualClass>(['foreign', 'paddy'])
+
+function visualOf(grain: ApiPerGrain): VisualClass {
+  const value = grain.visual_class ?? grain.class_label
+  return VISUAL_CLASSES.includes(value as VisualClass)
+    ? (value as VisualClass)
+    : 'clear'
+}
+
+function dimensionOf(grain: ApiPerGrain): DimensionalClass {
+  const value = grain.dimensional_class ?? grain.class_label
+  return DIMENSIONAL_CLASSES.includes(value as DimensionalClass)
+    ? (value as DimensionalClass)
+    : 'whole'
+}
+
 export function GrainCorrectionPanel({
   resultId,
   perGrain,
   selectedGrainId,
   onClearSelection,
 }: Props) {
-  const [pendingEdits, setPendingEdits] = useState<Map<number, GrainClass>>(
+  const [pendingEdits, setPendingEdits] = useState<Map<number, PendingEdit>>(
     new Map(),
   )
   const apply = useApplyGrainCorrections(resultId)
@@ -44,19 +65,34 @@ export function GrainCorrectionPanel({
     () =>
       Array.from(pendingEdits, ([grain_id, to_class]) => ({
         grain_id,
-        to_class,
+        to_visual_class: to_class.visual_class,
+        to_dimensional_class: NON_RICE.has(to_class.visual_class)
+          ? 'non_rice'
+          : to_class.dimensional_class,
       })),
     [pendingEdits],
   )
 
-  const stage = (grainId: number, toClass: GrainClass) => {
+  const stage = (grainId: number, patch: Partial<PendingEdit>) => {
     setPendingEdits((prev) => {
       const next = new Map(prev)
       const original = perGrain.find((g) => g.grain_id === grainId)
-      if (original?.class_label === toClass) {
+      if (!original) return next
+      const current = next.get(grainId) ?? {
+        visual_class: visualOf(original),
+        dimensional_class: dimensionOf(original),
+      }
+      const staged = { ...current, ...patch }
+      if (NON_RICE.has(staged.visual_class)) {
+        staged.dimensional_class = 'whole'
+      }
+      if (
+        visualOf(original) === staged.visual_class &&
+        dimensionOf(original) === staged.dimensional_class
+      ) {
         next.delete(grainId)
       } else {
-        next.set(grainId, toClass)
+        next.set(grainId, staged)
       }
       return next
     })
@@ -88,25 +124,59 @@ export function GrainCorrectionPanel({
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">
             Grain #{selected.grain_id} • current:{' '}
-            <span className="font-mono">{selected.class_label}</span>
+            <span className="font-mono">
+              {visualOf(selected)} / {dimensionOf(selected)}
+            </span>
           </p>
-          <Select
-            value={pendingEdits.get(selected.grain_id) ?? selected.class_label}
-            onValueChange={(value) =>
-              stage(selected.grain_id, value as GrainClass)
+          {(() => {
+            const staged = pendingEdits.get(selected.grain_id) ?? {
+              visual_class: visualOf(selected),
+              dimensional_class: dimensionOf(selected),
             }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {GRAIN_CLASSES.map((cls) => (
-                <SelectItem key={cls} value={cls}>
-                  {cls}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            return (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Select
+                  value={staged.visual_class}
+                  onValueChange={(value) =>
+                    stage(selected.grain_id, {
+                      visual_class: value as VisualClass,
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VISUAL_CLASSES.map((cls) => (
+                      <SelectItem key={cls} value={cls}>
+                        {cls}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={staged.dimensional_class}
+                  disabled={NON_RICE.has(staged.visual_class)}
+                  onValueChange={(value) =>
+                    stage(selected.grain_id, {
+                      dimensional_class: value as DimensionalClass,
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DIMENSIONAL_CLASSES.map((cls) => (
+                      <SelectItem key={cls} value={cls}>
+                        {cls}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )
+          })()}
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">
@@ -116,32 +186,36 @@ export function GrainCorrectionPanel({
 
       {editsArray.length > 0 && (
         <ul className="max-h-48 space-y-1 overflow-y-auto text-xs">
-          {editsArray.map(({ grain_id, to_class }) => {
-            const original = perGrain.find((g) => g.grain_id === grain_id)
-            return (
-              <li
-                key={grain_id}
-                className="flex items-center justify-between rounded bg-muted/40 px-2 py-1 font-mono"
-              >
-                <span>
-                  #{grain_id}: {original?.class_label} → {to_class}
-                </span>
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={() =>
-                    setPendingEdits((prev) => {
-                      const next = new Map(prev)
-                      next.delete(grain_id)
-                      return next
-                    })
-                  }
+          {editsArray.map(
+            ({ grain_id, to_visual_class, to_dimensional_class }) => {
+              const original = perGrain.find((g) => g.grain_id === grain_id)
+              if (!original) return null
+              return (
+                <li
+                  key={grain_id}
+                  className="flex items-center justify-between rounded bg-muted/40 px-2 py-1 font-mono"
                 >
-                  ×
-                </button>
-              </li>
-            )
-          })}
+                  <span>
+                    #{grain_id}: {visualOf(original)} / {dimensionOf(original)}{' '}
+                    → {to_visual_class} / {to_dimensional_class}
+                  </span>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() =>
+                      setPendingEdits((prev) => {
+                        const next = new Map(prev)
+                        next.delete(grain_id)
+                        return next
+                      })
+                    }
+                  >
+                    ×
+                  </button>
+                </li>
+              )
+            },
+          )}
         </ul>
       )}
 

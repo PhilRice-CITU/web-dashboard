@@ -106,13 +106,6 @@ export const analyticsMetricCatalog: AnalyticsMetricDefinition[] = [
     allowedChartTypes: ['line', 'bar', 'area', 'composed'],
   },
   {
-    key: 'avgDamaged',
-    label: 'Avg Damaged',
-    unit: '%',
-    category: 'quality',
-    allowedChartTypes: ['line', 'bar', 'area', 'composed'],
-  },
-  {
     key: 'avgRed',
     label: 'Avg Red Kernels',
     unit: '%',

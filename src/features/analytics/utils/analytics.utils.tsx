@@ -68,7 +68,6 @@ export function aggregateAnalyticsByGranularity(
       avgBrewers: 0,
       avgChalkiness: 0,
       avgDiscoloration: 0,
-      avgDamaged: 0,
       avgRed: 0,
       avgLengthMm: 0,
     } satisfies AnalyticsData
@@ -164,7 +163,6 @@ export function mapTrendPointToAnalyticsData(
     avgBrewers: point.factor_averages.brewers ?? 0,
     avgChalkiness: point.factor_averages.chalky ?? 0,
     avgDiscoloration: point.factor_averages.discolored ?? 0,
-    avgDamaged: point.factor_averages.damaged ?? 0,
     avgRed: point.factor_averages.red ?? 0,
     avgLengthMm: point.avg_length_mm,
   }
