@@ -12,22 +12,27 @@ import {
 
 const docs = [
   {
-    title: 'Edge Client Specification',
+    title: 'API Server Architecture',
     description:
-      'Boot, capture, kiosk, uploader, heartbeat, and systemd contract.',
-    href: '/docs-and-architecture/edge.client.md',
+      'Per-layer file map (routers → services → repositories) and request flow.',
+    href: '/docs-and-architecture/api-server/architecture.md',
   },
   {
-    title: 'Project Planner',
-    description:
-      'Execution plan with milestones for edge, API, model, and dashboard.',
-    href: '/docs-and-architecture/planner-pt-2.md',
+    title: 'Database Schema',
+    description: 'ER diagram, table reference, and Supabase setup guide.',
+    href: '/docs-and-architecture/api-server/database-schema.md',
   },
   {
-    title: 'Technical Master Plan',
+    title: 'Grading Pipeline',
     description:
-      'Full architecture and model training strategy with risk register.',
-    href: '/docs-and-architecture/Planner.md',
+      'How app/grading/ turns raw + IR images into a PNS/BAFS 290:2025 grade.',
+    href: '/docs-and-architecture/api-server/grading-pipeline.md',
+  },
+  {
+    title: 'Metrics Contract',
+    description:
+      'Canonical metrics JSONB schema bridging vision-model output to analytics queries.',
+    href: '/docs-and-architecture/api-server/metrics-contract.md',
   },
 ]
 
