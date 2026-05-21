@@ -28,6 +28,18 @@ export const docsNav: DocsSection[] = [
     ],
   },
   {
+    label: 'Edge Client',
+    items: [
+      'edge-client/overview',
+      'edge-client/installing',
+      'edge-client/first-time-setup',
+      'edge-client/daily-operation',
+      'edge-client/configuration',
+      'edge-client/updates-and-troubleshooting',
+      'edge-client/developer-reference',
+    ],
+  },
+  {
     label: 'Technical Reference',
     items: [
       'technical-reference/api-architecture',
