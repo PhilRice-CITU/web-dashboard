@@ -1,15 +1,19 @@
 import type { ComponentType } from 'react'
 
-/** Frontmatter exported by every doc file. */
+/** Frontmatter as parsed from a doc file — fields may be absent before normalization. */
 export interface DocFrontmatter {
-  title: string
-  description: string
+  title?: string
+  description?: string
 }
 
-/** A resolved doc page from the registry. */
+/** A resolved doc page from the registry (frontmatter normalized). */
 export interface DocMeta extends DocFrontmatter {
   /** URL slug, e.g. "getting-started/introduction" (no extension). */
   slug: string
+  /** Page title — always present (the registry skips files without one). */
+  title: string
+  /** Page description — normalized to '' when absent from frontmatter. */
+  description: string
   /** Compiled MDX component. */
   Component: ComponentType
 }

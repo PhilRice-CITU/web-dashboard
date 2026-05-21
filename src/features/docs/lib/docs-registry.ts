@@ -30,7 +30,7 @@ for (const [path, mod] of Object.entries(modules)) {
   registry.set(slug, {
     slug,
     title: fm.title,
-    description: fm.description || '',
+    description: fm.description ?? '',
     Component: mod.default,
   })
 }
