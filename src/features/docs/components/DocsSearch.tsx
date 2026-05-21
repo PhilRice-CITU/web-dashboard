@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { SearchIcon } from 'lucide-react'
 import {
@@ -20,18 +20,6 @@ export function DocsSearch({
   const index = useMemo(() => buildSearchIndex(), [])
   const [query, setQuery] = useState('')
   const results = useMemo(() => searchDocs(index, query), [index, query])
-
-  // Open/close on Cmd/Ctrl+K from anywhere in the docs.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        onOpenChange(!open)
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onOpenChange])
 
   function go(slug: string) {
     onOpenChange(false)

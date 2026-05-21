@@ -84,11 +84,38 @@ function RootNotFound() {
   )
 }
 
+/** Inline script that registers the ⌘K / Ctrl+K shortcut immediately on
+ *  page load — before React mounts — so that keyboard events are captured
+ *  even in automated tests where no user click has focused the page yet.
+ *  DocsLayout reads `window.__docsSearchPending` on mount and clears it. */
+const DOCS_SEARCH_SCRIPT = `
+(function(){
+  var pending = false;
+  Object.defineProperty(window,'__docsSearchPending',{
+    get: function(){ return pending; },
+    set: function(v){ pending = v; },
+    configurable: true
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='k'&&(e.metaKey||e.ctrlKey)){
+      e.preventDefault();
+      if(window.__docsSearchHandler){
+        window.__docsSearchHandler();
+      } else {
+        pending = !pending;
+      }
+    }
+  });
+})();
+`
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Must be first in <head> so it runs before any React code */}
+        <script dangerouslySetInnerHTML={{ __html: DOCS_SEARCH_SCRIPT }} />
       </head>
       <body className="m-0 p-0 wrap-anywhere font-sans antialiased">
         <QueryProvider>

@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "sync:docs": "node scripts/sync-docs.mjs",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "lint": "eslint",
     "format": "prettier --check .",
     "check": "prettier --write . && eslint --fix",

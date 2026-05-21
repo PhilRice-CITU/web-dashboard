@@ -29,6 +29,7 @@ const config = defineConfig({
       ...mdx({
         remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
         rehypePlugins: [rehypeSlug, rehypeHighlight],
+        providerImportSource: '@mdx-js/react',
       }),
     },
     viteReact({ include: /\.(mdx|md|js|jsx|ts|tsx)$/ }),
