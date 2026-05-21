@@ -1,0 +1,34 @@
+---
+title: Updates & troubleshooting
+description: How the device updates itself, and fixes for common problems.
+---
+
+# Updates & troubleshooting
+
+## Updates
+
+The device updates itself. It periodically checks for a newer published
+release and installs it the next time the app restarts — no manual action is
+needed. To force an update, restart the device.
+
+## Troubleshooting
+
+**The cameras don't take a photo.** Check that both cameras are connected and
+seated. Capture is handled by a camera script on the Pi; a loose camera cable
+is the most common cause.
+
+**The lighting doesn't switch.** The IR and white LEDs are switched through a
+GPIO relay. Check the relay wiring and the GPIO connections.
+
+**The device can't reach the server.** Check the Pi's network connection and
+that `API_BASE_URL` in the configuration points at the right hum.ai API.
+
+**"Device authentication failed".** The `DEVICE_ID` / `DEVICE_SECRET` are
+wrong, or the device was removed from the dashboard. Re-run
+[first-time setup](/docs/edge-client/first-time-setup) to provision the device
+again.
+
+<Callout>
+  If a problem persists, contact a system administrator with the device's
+  display name and `DEVICE_ID`.
+</Callout>

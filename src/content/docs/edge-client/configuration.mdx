@@ -1,0 +1,39 @@
+---
+title: Configuration & modes
+description: The device configuration file, its variables, and run modes.
+---
+
+# Configuration & modes
+
+## The configuration file
+
+The device reads its configuration from `~/.config/Hum.ai/.env`. Most values
+are written automatically during [first-time setup](/docs/edge-client/first-time-setup);
+you rarely need to edit this file by hand.
+
+| Variable | Purpose |
+| --- | --- |
+| `DEVICE_ID` | The device's unique identity. Written automatically during setup. |
+| `DEVICE_SECRET` | The device's authentication secret. Written automatically during setup. |
+| `DEVICE_DISPLAY_NAME` | A human-readable name for the device, shown in the dashboard. |
+| `DEVICE_QR_URL` | A link to the device in the dashboard, shown as the setup QR code. |
+| `API_BASE_URL` | The hum.ai API the device uploads to. |
+| `API_TIMEOUT_SECONDS` | How long the device waits for an API response before giving up. |
+| `EDGE_MODE` | `production` or `training` — see below. |
+
+## Run modes
+
+The `EDGE_MODE` variable selects what the device does with a capture:
+
+- **Production** — the normal mode: captured scans are uploaded to the hum.ai
+  API and graded.
+- **Training** — captures are collected as labelled training data for improving
+  the grading model rather than being graded for a result.
+
+<Callout>
+  If you edit `~/.config/Hum.ai/.env` by hand, restart the device for the
+  change to take effect.
+</Callout>
+
+For help with updates or device problems, see
+[Updates & troubleshooting](/docs/edge-client/updates-and-troubleshooting).
