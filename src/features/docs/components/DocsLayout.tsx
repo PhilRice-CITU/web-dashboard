@@ -5,6 +5,7 @@ import { mdxComponents } from './mdx/mdx-components'
 import { DocsSidebar } from './DocsSidebar'
 import { DocsTOC } from './DocsTOC'
 import { DocsSearch } from './DocsSearch'
+import { DocsMobileNav } from './DocsMobileNav'
 import { useTableOfContents } from '../hooks/useTableOfContents'
 
 export function DocsLayout() {
@@ -17,6 +18,7 @@ export function DocsLayout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <DocsMobileNav onOpenSearch={() => setSearchOpen(true)} />
       <div className="mx-auto grid max-w-[1120px] grid-cols-1 lg:grid-cols-[226px_minmax(0,1fr)] xl:grid-cols-[226px_minmax(0,1fr)_196px]">
         {/* left nav */}
         <div className="hidden lg:block">
