@@ -62,7 +62,7 @@ export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
         </kbd>
       </button>
 
-      {/* nav groups — one expanded at a time */}
+      {/* nav groups — each expands independently */}
       <nav aria-label="Documentation" className="flex flex-col gap-0.5">
         {docsNav.map((section) => {
           const open = openSections.includes(section.label)

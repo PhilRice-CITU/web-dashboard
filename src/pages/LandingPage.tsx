@@ -16,7 +16,6 @@ import {
 import { useSession } from '#/features/auth/hooks/useAuth'
 import { HeroRevealSection } from '#/features/landing/sections/HeroRevealSection'
 import { ProjectIntroSection } from '#/features/landing/sections/ProjectIntroSection'
-import { DeviceDisassemblySection } from '#/features/landing/sections/DeviceDisassemblySection'
 
 export function LandingPage() {
   const navigate = useNavigate()
@@ -95,7 +94,7 @@ export function LandingPage() {
                 className="flex items-center gap-5 text-sm [&_a]:text-foreground [&_a]:no-underline [&_a:hover]:text-foreground/70 pr-4"
                 style={{ opacity: navRevealProgress, x: navX }}
               >
-                <a href="#">Documentation</a>
+                <a href="/docs/getting-started/introduction">Documentation</a>
                 <a href="https://github.com/One-Team-One-Goal">GitHub</a>
                 <a href="/about">About Us</a>
               </motion.nav>
@@ -141,7 +140,7 @@ export function LandingPage() {
         </div>
       </header>
 
-      <HeroRevealSection onGetStarted={() => navigate({ to: '/register' })} />
+      <HeroRevealSection onGetStarted={() => navigate({ to: '/login' })} />
       <ProjectIntroSection />
       {/* <DeviceDisassemblySection /> */}
 
