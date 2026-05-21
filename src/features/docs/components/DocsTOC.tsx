@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import { cn } from '#/shared/lib/utils'
 import type { TocItem } from '../types'
 
@@ -10,9 +11,18 @@ export function DocsTOC({
 }) {
   if (items.length === 0) return <aside className="hidden xl:block" />
 
+  /** Scroll to the heading explicitly — reliable inside the SPA router. */
+  function handleClick(event: MouseEvent<HTMLAnchorElement>, id: string) {
+    const target = document.getElementById(id)
+    if (!target) return
+    event.preventDefault()
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    window.history.replaceState(null, '', `#${id}`)
+  }
+
   return (
     <aside className="hidden xl:block">
-      <div className="sticky top-10 px-4 py-9">
+      <div className="sticky top-10 max-h-[calc(100vh-2.5rem)] overflow-y-auto px-4 py-9">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           On this page
         </p>
@@ -21,6 +31,7 @@ export function DocsTOC({
             <li key={item.id}>
               <a
                 href={`#${item.id}`}
+                onClick={(event) => handleClick(event, item.id)}
                 className={cn(
                   'block py-1 text-[13px] leading-snug transition-colors',
                   item.level === 3 && 'pl-3',
