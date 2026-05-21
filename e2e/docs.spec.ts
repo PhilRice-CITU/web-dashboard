@@ -29,6 +29,9 @@ test.describe('Documentation site', () => {
 
   test('search dialog opens and navigates', async ({ page }) => {
     await page.goto('/docs')
+    await expect(
+      page.getByRole('heading', { name: 'Introduction', level: 1 }),
+    ).toBeVisible()
     await page.keyboard.press('ControlOrMeta+k')
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()

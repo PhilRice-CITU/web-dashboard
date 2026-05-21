@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Outlet, useRouterState } from '@tanstack/react-router'
 import { MDXProvider } from '@mdx-js/react'
 import { mdxComponents } from './mdx/mdx-components'
@@ -11,26 +11,6 @@ import { useTableOfContents } from '../hooks/useTableOfContents'
 export function DocsLayout() {
   const [searchOpen, setSearchOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
-
-  // Wire up the global ⌘K / Ctrl+K shortcut.
-  // The inline script in __root.tsx registers the raw keydown listener before
-  // React mounts and stores a reference in window.__docsSearchHandler.
-  // On unmount we clear it so the handler doesn't call stale state setters.
-  useLayoutEffect(() => {
-    const toggle = () => setSearchOpen((prev) => !prev)
-    // Consume any pending keystroke that arrived before this component mounted.
-    if ((window as { __docsSearchPending?: boolean }).__docsSearchPending) {
-      ;(window as { __docsSearchPending?: boolean }).__docsSearchPending = false
-      setSearchOpen(true)
-    }
-    // Hand the toggle function to the pre-registered global keydown handler.
-    ;(window as { __docsSearchHandler?: () => void }).__docsSearchHandler =
-      toggle
-    return () => {
-      ;(window as { __docsSearchHandler?: () => void }).__docsSearchHandler =
-        undefined
-    }
-  }, [])
 
   // Re-extract the TOC whenever the route (doc page) changes.
   const pathname = useRouterState({ select: (s) => s.location.pathname })
