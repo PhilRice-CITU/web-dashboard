@@ -8,8 +8,9 @@ description: How the device updates itself, and fixes for common problems.
 ## Updates
 
 The device updates itself. It periodically checks for a newer published
-release and installs it the next time the app restarts — no manual action is
-needed. To force an update, restart the device.
+release, downloads it in the background, and installs it the next time the app
+restarts — no manual action is needed. Restarting the device triggers an
+update check right away.
 
 ## Troubleshooting
 
@@ -28,7 +29,14 @@ wrong, or the device was removed from the dashboard. Re-run
 [first-time setup](/docs/edge-client/first-time-setup) to provision the device
 again.
 
+**Checking the logs.** For live kiosk output run `journalctl -u hum-ai -f`;
+the app's own logs are written to `~/.config/Hum.ai/logs/`.
+
 <Callout>
   If a problem persists, contact a system administrator with the device's
   display name and `DEVICE_ID`.
 </Callout>
+
+That covers installing and operating an edge device. Developers extending the
+edge-client can continue to the
+[Developer reference](/docs/edge-client/developer-reference).

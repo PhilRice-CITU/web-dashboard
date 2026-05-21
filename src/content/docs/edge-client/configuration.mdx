@@ -15,20 +15,25 @@ you rarely need to edit this file by hand.
 | --- | --- |
 | `DEVICE_ID` | The device's unique identity. Written automatically during setup. |
 | `DEVICE_SECRET` | The device's authentication secret. Written automatically during setup. |
-| `DEVICE_DISPLAY_NAME` | A human-readable name for the device, shown in the dashboard. |
-| `DEVICE_QR_URL` | A link to the device in the dashboard, shown as the setup QR code. |
-| `API_BASE_URL` | The hum.ai API the device uploads to. |
+| `DEVICE_DISPLAY_NAME` | A human-readable name for the device, shown in the dashboard. Written automatically during setup. |
+| `DEVICE_QR_URL` | A link to the device in the dashboard, encoded in the setup QR code. Written automatically during setup. |
+| `API_BASE_URL` | The hum.ai API the device uploads to. Defaults to the production server; change only for testing. |
 | `API_TIMEOUT_SECONDS` | How long the device waits for an API response before giving up. |
 | `EDGE_MODE` | `production` or `training` — see below. |
+
+The file also contains local-path overrides (`IMAGE_DIR`, `LOG_DIR`,
+`CAPTURE_LOCK_FILE`) and upload-target settings (`PRODUCTION_UPLOAD_TARGET`,
+`TRAINING_UPLOAD_TARGET`). Leave these at their defaults unless instructed
+otherwise.
 
 ## Run modes
 
 The `EDGE_MODE` variable selects what the device does with a capture:
 
-- **Production** — the normal mode: captured scans are uploaded to the hum.ai
-  API and graded.
-- **Training** — captures are collected as labelled training data for improving
-  the grading model rather than being graded for a result.
+- **`production`** — the normal mode: captured scans are uploaded to the
+  hum.ai API and graded.
+- **`training`** — captures are collected as labelled training data for
+  improving the grading model rather than being graded for a result.
 
 <Callout>
   If you edit `~/.config/Hum.ai/.env` by hand, restart the device for the
