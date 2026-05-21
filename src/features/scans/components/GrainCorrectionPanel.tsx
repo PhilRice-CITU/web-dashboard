@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
 import { useApplyGrainCorrections } from '#/features/scans/hooks/useScanDetail'
@@ -51,7 +52,20 @@ export function GrainCorrectionPanel({
   const [pendingEdits, setPendingEdits] = useState<Map<number, PendingEdit>>(
     new Map(),
   )
+  const queryClient = useQueryClient()
   const apply = useApplyGrainCorrections(resultId)
+
+  const errorDetail = apply.error
+    ? axiosErrorDetail(apply.error, 'Failed to save corrections')
+    : null
+  const isStaleError = errorDetail?.includes('No effective changes') ?? false
+
+  const refreshResult = () => {
+    queryClient.invalidateQueries({ queryKey: ['result', resultId] })
+    setPendingEdits(new Map())
+    apply.reset()
+    onClearSelection()
+  }
 
   const selected = useMemo(
     () =>
@@ -231,10 +245,27 @@ export function GrainCorrectionPanel({
           : `Save ${editsArray.length} correction(s)`}
       </Button>
 
-      {apply.error && (
-        <p className="text-xs text-destructive">
-          {axiosErrorDetail(apply.error, 'Failed to save corrections')}
-        </p>
+      {errorDetail && (
+        <div className="space-y-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2">
+          {isStaleError ? (
+            <>
+              <p className="text-xs text-destructive">
+                These grains are already at the target class — your view is out
+                of date. Someone (or another tab) likely corrected this scan
+                already.
+              </p>
+              <button
+                type="button"
+                onClick={refreshResult}
+                className="text-xs font-medium text-destructive underline underline-offset-2 hover:no-underline"
+              >
+                Refresh scan data
+              </button>
+            </>
+          ) : (
+            <p className="text-xs text-destructive">{errorDetail}</p>
+          )}
+        </div>
       )}
     </section>
   )
