@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import { ArrowLeftIcon, ChevronDownIcon, SearchIcon } from 'lucide-react'
 import { cn } from '#/shared/lib/utils'
-import { docsNav, getSectionLabel } from '../docs.config'
+import { docsNav } from '../docs.config'
 import { getDoc } from '../lib/docs-registry'
 import { DocsThemeToggle } from './DocsThemeToggle'
 
@@ -15,17 +15,13 @@ function useCurrentSlug(): string {
 export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
   const currentSlug = useCurrentSlug()
 
-  // The nav group holding the current page — falls back to the first group
-  // at the /docs index, where no slug matches a section.
-  const currentSection = getSectionLabel(currentSlug) ?? docsNav[0].label
+  const [openSections, setOpenSections] = useState<string[]>([])
 
-  // One group expanded at a time; the current page's group opens by default.
-  const [openSection, setOpenSection] = useState(currentSection)
-
-  // Follow navigation: opening the group of whichever page you land on.
-  useEffect(() => {
-    setOpenSection(currentSection)
-  }, [currentSection])
+  function toggleSection(label: string) {
+    setOpenSections((prev) =>
+      prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label],
+    )
+  }
 
   return (
     <aside className="flex flex-col gap-1 px-3 py-4">
@@ -69,14 +65,14 @@ export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
       {/* nav groups — one expanded at a time */}
       <nav aria-label="Documentation" className="flex flex-col gap-0.5">
         {docsNav.map((section) => {
-          const open = openSection === section.label
+          const open = openSections.includes(section.label)
           return (
             <div key={section.label}>
               <button
                 type="button"
-                onClick={() => setOpenSection(open ? '' : section.label)}
+                onClick={() => toggleSection(section.label)}
                 aria-expanded={open}
-                className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+                className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
               >
                 <span>{section.label}</span>
                 <ChevronDownIcon
@@ -99,7 +95,7 @@ export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
                           params={{ _splat: slug }}
                           aria-current={active ? 'page' : undefined}
                           className={cn(
-                            'inline-block rounded-md px-2 py-1.5 text-sm transition-colors',
+                            'inline-block rounded-md px-2 py-1.5 text-xs transition-colors',
                             active
                               ? 'bg-accent font-medium text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
