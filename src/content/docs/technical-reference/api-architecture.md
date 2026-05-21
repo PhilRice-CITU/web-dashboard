@@ -1,6 +1,6 @@
 ---
-title: API architecture
-description: FastAPI request flow: routers, services, repositories.
+title: 'API architecture'
+description: 'FastAPI request flow: routers, services, repositories.'
 ---
 
 # api-server architecture

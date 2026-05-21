@@ -1,6 +1,6 @@
 ---
-title: Grading pipeline
-description: YOLO inference and PNS 290:2025 grading internals.
+title: 'Grading pipeline'
+description: 'YOLO inference and PNS 290:2025 grading internals.'
 ---
 
 # Grading Pipeline (PNS/BAFS 290:2025)

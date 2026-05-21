@@ -7,14 +7,25 @@ import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
+
 // docs-and-architecture sits beside the MAIN repo checkout. Resolve the main
 // repo via git's common dir so this also works when run from a git worktree.
-const mainRepo = dirname(
-  resolve(
-    root,
-    execSync('git rev-parse --git-common-dir', { cwd: root }).toString().trim(),
-  ),
-)
+let mainRepo
+try {
+  const gitCommonDir = execSync('git rev-parse --git-common-dir', {
+    cwd: root,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+    .toString()
+    .trim()
+  mainRepo = dirname(resolve(root, gitCommonDir))
+} catch {
+  console.error(
+    'sync-docs: could not resolve the git common dir. Run this from inside the web-dashboard repo.',
+  )
+  process.exit(1)
+}
+
 const SRC = join(mainRepo, '..', 'docs-and-architecture', 'api-server')
 const DEST = join(root, 'src', 'content', 'docs', 'technical-reference')
 
@@ -57,7 +68,8 @@ for (const [srcName, cfg] of Object.entries(FILES)) {
     continue
   }
   const body = await readFile(srcPath, 'utf8')
-  const frontmatter = `---\ntitle: ${cfg.title}\ndescription: ${cfg.description}\n---\n\n`
+  // Quote the YAML scalars — titles/descriptions may contain colons.
+  const frontmatter = `---\ntitle: "${cfg.title}"\ndescription: "${cfg.description}"\n---\n\n`
   await writeFile(join(DEST, cfg.target), frontmatter + body, 'utf8')
   console.log(`✓ ${srcName} → technical-reference/${cfg.target}`)
   synced++

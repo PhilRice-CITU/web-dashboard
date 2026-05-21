@@ -1,6 +1,6 @@
 ---
-title: Database schema
-description: Supabase Postgres tables, relationships, and RLS policies.
+title: 'Database schema'
+description: 'Supabase Postgres tables, relationships, and RLS policies.'
 ---
 
 # Database Schema

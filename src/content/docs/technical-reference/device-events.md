@@ -1,6 +1,6 @@
 ---
-title: Device events & operations
-description: Event tiers, retention windows, and operational notes.
+title: 'Device events & operations'
+description: 'Event tiers, retention windows, and operational notes.'
 ---
 
 # Device Events Operations

@@ -1,6 +1,6 @@
 ---
-title: Metrics contract
-description: Canonical shape of the results.metrics JSON payload.
+title: 'Metrics contract'
+description: 'Canonical shape of the results.metrics JSON payload.'
 ---
 
 # Metrics Contract
