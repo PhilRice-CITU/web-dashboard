@@ -1,0 +1,25 @@
+---
+title: Quality grades
+description: How hum.ai assigns an overall PNS quality grade.
+---
+
+Every graded scan receives one overall **quality grade** derived from the
+defects found in the sample.
+
+## How the grade is decided
+
+The pipeline measures each defect type as a percentage of the sample, then
+compares those percentages to the PNS/BAFS 290:2025 thresholds. The grade
+reflects the **worst** category the sample still satisfies — a single
+out-of-threshold defect can lower the overall grade.
+
+## Reading a grade
+
+On a result, the quality grade is shown alongside the metrics that produced it,
+so you can see which defect drove the outcome. A lower grade is not an error —
+it is an accurate measurement of the sample.
+
+<Callout>
+  Confirm the exact grade names and thresholds against your copy of PNS/BAFS
+  290:2025 before using this page operationally.
+</Callout>

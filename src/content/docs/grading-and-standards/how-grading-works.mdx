@@ -1,0 +1,25 @@
+---
+title: How grading works
+description: An overview of the hum.ai grading pipeline and PNS 290:2025.
+---
+
+hum.ai grades milled rice automatically using computer vision, following the
+**PNS/BAFS 290:2025** Philippine National Standard for milled rice.
+
+## The pipeline
+
+1. An edge device captures images of a rice sample under controlled lighting.
+2. The AI model detects individual grains and classifies their defects.
+3. Defect counts are measured against the PNS thresholds.
+4. A single overall **quality grade** is assigned and stored as a result.
+
+## Why it is consistent
+
+Because every sample runs through the same model and the same PNS thresholds,
+grading does not depend on a human inspector — the same rice produces the same
+grade every time.
+
+## Learn more
+
+- [Quality grades](/docs/grading-and-standards/quality-grades) — what each grade means.
+- [Defect types](/docs/grading-and-standards/defect-types) — the defects the model detects.
