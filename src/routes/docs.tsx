@@ -1,6 +1,6 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { DocsLayout } from '#/features/docs/components/DocsLayout'
 
-// Skeleton layout route — replaced with the real DocsLayout in Task 17.
 export const Route = createFileRoute('/docs')({
-  component: () => <Outlet />,
+  component: DocsLayout,
 })

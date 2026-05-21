@@ -1,6 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { FIRST_DOC_SLUG } from '#/features/docs/docs.config'
 
-// Skeleton index route — replaced with the real redirect in Task 17.
 export const Route = createFileRoute('/docs/')({
-  component: () => null,
+  beforeLoad: () => {
+    throw redirect({
+      to: '/docs/$',
+      params: { _splat: FIRST_DOC_SLUG },
+    })
+  },
 })
