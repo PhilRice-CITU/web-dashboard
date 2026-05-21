@@ -1,0 +1,43 @@
+---
+title: Overview
+description: What the Rice Vision edge device is and how it fits the system.
+---
+
+# Overview
+
+The **edge device** is a Raspberry Pi kiosk that captures rice-sample images
+and sends them to hum.ai for grading. It runs at the milling site; an operator
+uses it through a touchscreen and a physical capture button.
+
+## What's in the device
+
+- A Raspberry Pi with a touchscreen
+- Two cameras — one for an infrared (IR) shot, one for a white-LED shot
+- GPIO-controlled relays and lighting
+- A physical capture button
+
+## How it fits the system
+
+1. An operator places a rice sample and presses the capture button.
+2. The device takes the IR and white-LED photos and uploads them to the hum.ai
+   API.
+3. The API runs the grading pipeline and stores the graded result.
+4. The result appears in the **hum.ai dashboard**.
+
+The device identifies itself to the API with a device ID and secret it
+receives when it is first set up — see [First-time setup](/docs/edge-client/first-time-setup).
+
+<CardGrid>
+  <DocCard title="Installing" slug="edge-client/installing">
+    Set up the device on a Raspberry Pi.
+  </DocCard>
+  <DocCard title="First-time setup" slug="edge-client/first-time-setup">
+    Provision the device and give it an identity.
+  </DocCard>
+  <DocCard title="Daily operation" slug="edge-client/daily-operation">
+    Capture and submit rice scans.
+  </DocCard>
+  <DocCard title="Developer reference" slug="edge-client/developer-reference">
+    Architecture, building, and releasing.
+  </DocCard>
+</CardGrid>
