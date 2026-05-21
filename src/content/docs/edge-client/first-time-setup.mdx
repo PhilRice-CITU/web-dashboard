@@ -1,0 +1,32 @@
+---
+title: First-time setup
+description: Provisioning the edge device and giving it an identity.
+---
+
+# First-time setup
+
+When the device starts for the first time it has no identity, so after the
+splash screen it opens the **Setup** screen. There are two ways to set it up.
+
+## Provision a new device
+
+1. On the Setup screen, pick your **region** from the dropdown.
+2. Selecting a region immediately registers the device — no separate button
+   press required.
+3. The device contacts the hum.ai API, registers itself, and receives its
+   `device_id` and `device_secret`. These are saved to the device's
+   configuration automatically.
+4. The device shows a confirmation (with a QR code) and moves to the **Home**
+   screen.
+
+## Claim a pre-provisioned device
+
+If a device was already created for you, choose **Claim an existing device**
+and paste its `device_id`. The device adopts that identity instead of
+registering a new one.
+
+<Callout>
+  The `device_id` and `device_secret` are stored in `~/.config/Hum.ai/.env` and
+  are how the device authenticates every upload. Treat the secret like a
+  password. See [Configuration & modes](/docs/edge-client/configuration).
+</Callout>
