@@ -22,7 +22,7 @@ export function DocsLayout() {
       <div className="mx-auto grid max-w-[1120px] grid-cols-1 lg:grid-cols-[226px_minmax(0,1fr)] xl:grid-cols-[226px_minmax(0,1fr)_196px]">
         {/* left nav */}
         <div className="hidden lg:block">
-          <div className="sticky top-0 max-h-screen overflow-y-auto">
+          <div className="hide-scrollbar sticky top-0 max-h-screen overflow-y-auto">
             <DocsSidebar onOpenSearch={() => setSearchOpen(true)} />
           </div>
         </div>

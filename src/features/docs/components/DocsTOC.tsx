@@ -22,7 +22,7 @@ export function DocsTOC({
 
   return (
     <aside className="hidden xl:block">
-      <div className="sticky top-10 max-h-[calc(100vh-2.5rem)] overflow-y-auto px-4 py-9">
+      <div className="hide-scrollbar sticky top-10 max-h-[calc(100vh-2.5rem)] overflow-y-auto px-4 py-9">
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           On this page
         </p>

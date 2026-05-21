@@ -32,7 +32,10 @@ export function DocsMobileNav({ onOpenSearch }: { onOpenSearch: () => void }) {
         >
           <MenuIcon className="size-4" />
         </SheetTrigger>
-        <SheetContent side="left" className="w-[264px] overflow-y-auto p-0">
+        <SheetContent
+          side="left"
+          className="hide-scrollbar w-[264px] overflow-y-auto p-0"
+        >
           <SheetHeader className="sr-only">
             <SheetTitle>Documentation navigation</SheetTitle>
           </SheetHeader>
