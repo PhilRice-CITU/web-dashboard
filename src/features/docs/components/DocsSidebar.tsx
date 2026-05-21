@@ -43,6 +43,7 @@ export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
       <button
         type="button"
         onClick={onOpenSearch}
+        aria-label="Search docs"
         className="mb-3 flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent/60"
       >
         <SearchIcon aria-hidden className="size-3.5" />
@@ -68,6 +69,7 @@ export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
                     <Link
                       to="/docs/$"
                       params={{ _splat: slug }}
+                      aria-current={active ? 'page' : undefined}
                       className={cn(
                         'block rounded-md px-2 py-1.5 text-[13px] transition-colors',
                         active
