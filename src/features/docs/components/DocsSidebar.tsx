@@ -88,7 +88,7 @@ export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
                 />
               </button>
               {open && (
-                <ul className="mt-0.5 flex flex-col gap-0.5">
+                <ul className="mt-0.5 flex flex-col gap-0.5 pl-3">
                   {section.items.map((slug) => {
                     const doc = getDoc(slug)
                     const active = slug === currentSlug
@@ -99,7 +99,7 @@ export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
                           params={{ _splat: slug }}
                           aria-current={active ? 'page' : undefined}
                           className={cn(
-                            'block rounded-md px-2 py-1.5 text-[13px] transition-colors',
+                            'inline-block rounded-md px-2 py-1.5 text-sm transition-colors',
                             active
                               ? 'bg-accent font-medium text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
