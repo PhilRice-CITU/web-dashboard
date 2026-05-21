@@ -20,6 +20,7 @@ export function NavSecondary({
     title: string
     url: string
     icon: React.ReactNode
+    openInNewTab?: boolean
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   const pathname = useRouterState({
@@ -40,12 +41,20 @@ export function NavSecondary({
                 <SidebarMenuButton
                   size="sm"
                   isActive={isActive}
-                  render={<Link to={item.url} />}
+                  render={
+                    item.openInNewTab ? (
+                      <a href={item.url} target="_blank" rel="noreferrer" />
+                    ) : (
+                      <Link to={item.url} />
+                    )
+                  }
                 >
                   {item.icon}
                   <span>{item.title}</span>
                 </SidebarMenuButton>
-                {isActive ? <SidebarMenuBadge>•</SidebarMenuBadge> : null}
+                {isActive && !item.openInNewTab ? (
+                  <SidebarMenuBadge>•</SidebarMenuBadge>
+                ) : null}
               </SidebarMenuItem>
             )
           })}
