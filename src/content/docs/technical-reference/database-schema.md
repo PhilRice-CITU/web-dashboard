@@ -110,6 +110,14 @@ erDiagram
         timestamp created_at
     }
 
+    SUGGESTIONS {
+        uuid id PK
+        text title
+        text body
+        uuid user_id "Nullable — auth.users FK, ON DELETE SET NULL"
+        timestamptz created_at
+    }
+
     REGIONS ||--o{ USERS : "assigned to"
     REGIONS ||--o{ DEVICES : "houses"
     DEVICES ||--o{ RESULTS : "processes"
@@ -128,23 +136,28 @@ The `metrics` column stores the output of the AI inference pipeline after it has
 
 See [metrics-contract.md](./metrics-contract.md) for the full field spec, grade mapping table, and transformation code.
 
-**Quick reference — expected keys:**
+**Quick reference — expected keys** (source: `app/utils/metrics.py::build_metrics()`; see [metrics-contract.md](./metrics-contract.md) for full spec):
 
-| Key                       | Type                 | Example                            |
-| ------------------------- | -------------------- | ---------------------------------- |
-| `qualityGrade`            | `"A"\|"B"\|"C"\|"D"` | `"B"`                              |
-| `rawGrade`                | string               | `"Grade No. 2"`                    |
-| `totalGrains`             | int                  | `112`                              |
-| `grainSizeClass`          | string               | `"long"`                           |
-| `limitingFactor`          | string               | `"chalky_kernels_pct"`             |
-| `brokenGrains`            | float                | `8.93`                             |
-| `chalkinessPercentage`    | float                | `6.25`                             |
-| `discolorationPercentage` | float                | `0.71`                             |
-| `foreignMatter`           | float                | `0.0`                              |
-| `moistureContent`         | float\|null          | `null` (sensor not yet integrated) |
-| `grainLengthMm`           | float\|null          | `6.8`                              |
-| `qualityScore`            | float\|null          | `null` (not yet implemented)       |
-| `parameters`              | object               | Full PNS/BAFS parameter set        |
+| Field                     | Type          | Notes                                          |
+| ------------------------- | ------------- | ---------------------------------------------- |
+| `qualityGrade`            | string        | raw PNS grade (e.g. `"Grade no. 2"`)           |
+| `totalGrains`             | int           |                                                |
+| `grainSizeClass`          | string        | PNS class                                      |
+| `estimatedSizeClass`      | string        | fallback estimate                              |
+| `limitingFactor`          | string        | factor that set the grade                      |
+| `brokenGrains`            | float         | % by weight                                    |
+| `brewers`                 | float         | % by weight                                    |
+| `chalkinessPercentage`    | float         | % by weight                                    |
+| `discolorationPercentage` | float         | % by weight                                    |
+| `damagedPercentage`       | float         | legacy, always `0.0`                           |
+| `redKernelPercentage`     | float         | % by weight                                    |
+| `foreignCount`            | int           | count-only diagnostic                          |
+| `paddyCount`              | int           | count-only diagnostic                          |
+| `grainLengthMm`           | float \| null |                                                |
+| `rawGrade`                | string        | copy of `qualityGrade`                         |
+| `gradeOverridden`         | bool          |                                                |
+| `parameters`              | object        | `{ broken, brewers, discolored, chalky, red }` |
+| `perGrain`                | array         | per-grain detail objects                       |
 
 ---
 
@@ -239,3 +252,19 @@ Open a **new query**, paste [`../seed.sql`](../seed.sql), click **Run**. Inserts
 3. Set it to **Private** (FastAPI handles all uploads using the service role key — no public access needed)
 
 The `storage_url` column in `result_images` stores the path within this bucket (e.g., `results/<result_id>/noir.jpg`).
+
+---
+
+## Known Inconsistency — device_events vs. Migrations
+
+**Known inconsistency — device_events vs. migrations.** The migration
+`migrations/2026-05-10_remove_mqtt_tables.sql` drops both `device_commands`
+and `device_events`. However, the current api-server code **requires
+`device_events`** — it is used by `app/routers/dashboard/events.py`,
+`app/repositories/device_events_repo.py`, and
+`app/services/device_event_service.py`. So running the base schema plus all
+migrations diverges from both `schema.sql` (which still defines
+`device_events`) and from the code. A follow-up migration that re-creates
+`device_events` is likely needed. `device_commands` is currently **not
+referenced anywhere** in the api-server code. These are flagged for a team
+decision; this documentation pass does not rewrite migration history.
