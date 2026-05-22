@@ -1,0 +1,47 @@
+---
+title: Defect types
+description: The rice-grain defects hum.ai detects.
+---
+
+# Defect types
+
+The grading model classifies each grain and reports the defects it finds. These
+measurements determine the [quality grade](/docs/grading-and-standards/quality-grades).
+
+## The five graded defect factors
+
+These five factors each contribute to the overall grade. Each is measured as a
+percentage of the sample and compared against the PNS/BAFS 290:2025 thresholds.
+
+- **Broken grains** — grains shorter than a full kernel. Determined by grain
+  dimensions (size/length).
+- **Brewers** — very small grain fragments, smaller than broken grains.
+  Also determined by grain dimensions (size/length).
+- **Discolored kernels** — kernels with discoloration or visible damage.
+  (This factor covers what was formerly referred to separately as "damaged" — the
+  two are consolidated into a single discolored/damaged category.)
+- **Chalky grains** — grains with opaque, starchy white areas.
+- **Red kernels** — kernels with red pigmentation.
+
+## Count-only diagnostics
+
+Two additional items are detected and reported as counts, but they do **not**
+affect the grade calculation:
+
+- **Foreign matter** — non-rice material in the sample.
+- **Paddy** — unhusked grains found in the milled rice sample.
+
+These are flagged for operator awareness but are excluded from the grading
+thresholds.
+
+## How defects are measured
+
+Each of the five graded factors is reported as a percentage of the sample. The
+percentages are what get compared to the PNS thresholds during grading. Foreign
+matter and paddy are reported as counts only.
+
+<Callout>
+  The exact defect taxonomy follows PNS/BAFS 290:2025 — see the
+  [Grading pipeline](/docs/technical-reference/grading-pipeline) reference for
+  how each defect is detected.
+</Callout>

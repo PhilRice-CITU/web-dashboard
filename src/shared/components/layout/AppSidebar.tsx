@@ -55,6 +55,7 @@ const navSecondary = [
     title: 'Documentation',
     url: '/docs',
     icon: <BookOpenIcon />,
+    openInNewTab: true,
   },
 ]
 

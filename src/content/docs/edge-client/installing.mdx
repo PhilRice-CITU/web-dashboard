@@ -1,0 +1,60 @@
+---
+title: Installing on a Raspberry Pi
+description: Hardware checklist and how to install the edge-client on a Pi.
+---
+
+# Installing on a Raspberry Pi
+
+## Hardware checklist
+
+- A Raspberry Pi 4 or 5 with a touchscreen
+- Two cameras wired for the IR and white-LED shots
+- A GPIO relay board and LEDs for the controlled lighting
+- A momentary push button wired to GPIO for the capture trigger
+
+## Install the application
+
+The edge-client ships as a Debian package (`.deb`). On the Pi:
+
+1. Download the latest `hum-ai_*_arm64.deb` from the project's GitHub Releases.
+2. Install it:
+
+   ```bash
+   sudo dpkg -i hum-ai_*_arm64.deb
+   sudo apt-get install -f
+   ```
+
+3. Reboot the Pi.
+
+The package's post-install step installs the Python dependency, seeds the
+configuration file (`~/.config/Hum.ai/.env`) from a template if none exists,
+and registers a desktop autostart entry. After the reboot, the kiosk launches
+automatically on login.
+
+<Callout>
+  The device needs network access to the hum.ai API to provision and to upload
+  scans. Make sure the Pi is on the network before first launch.
+</Callout>
+
+After the device reboots, continue to [First-time setup](/docs/edge-client/first-time-setup)
+to give it an identity.
+
+## Running from source (development)
+
+<Callout>
+  This section is for developers. If you are setting up a production device, use
+  the `.deb` install above.
+</Callout>
+
+To run the edge-client from source on a development machine or a Pi:
+
+```bash
+git clone <edge-client repo>
+cd edge-client
+./setup.sh          # one-time: system packages, npm + Python deps, .env
+cd electron-app
+npm run dev
+```
+
+For the full architecture and release pipeline, see
+[Developer reference](/docs/edge-client/developer-reference).

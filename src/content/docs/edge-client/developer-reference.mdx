@@ -1,0 +1,41 @@
+---
+title: Developer reference
+description: Edge-client architecture and the build & release pipeline.
+---
+
+# Developer reference
+
+## Architecture
+
+The edge-client is an Electron application:
+
+- **Main process** (`electron-app/src/main/`) — runs the IPC handlers, the
+  auto-updater, the capture-button GPIO poller (`gpio.ts`), the Python sidecar
+  manager (`sidecar.ts`), and a `local-image://` protocol for showing captured
+  images.
+- **Preload bridge** (`electron-app/src/preload/`) — exposes a small, safe API
+  to the renderer over Electron's context bridge.
+- **Renderer** (`electron-app/src/renderer/`) — the kiosk UI: React 19 with
+  TanStack Router and TanStack Query, organized into pages, hooks, and
+  components. API calls and the `X-Device-ID` / `X-Device-Secret` headers are
+  built in `src/renderer/src/lib/api.ts`.
+
+The capture-button poller (`gpio.ts`) watches the physical button's GPIO pin
+and notifies the renderer when it is pressed. Camera capture itself is a bash
+script — `scripts/capture.sh` — that drives `rpicam-still` and switches the
+IR / white-LED lighting relay. The main process runs the script and reads back
+the captured image paths.
+
+## Build & release
+
+The device updates itself from GitHub Releases, so shipping a change is a
+release:
+
+1. From `electron-app/`, run `npm run release:patch` (or `release:minor` /
+   `release:major`). This bumps the version, commits, tags, and pushes the tag.
+2. The tag triggers GitHub Actions (`.github/workflows/release.yml`), which
+   builds the arm64 `.deb` and publishes it to GitHub Releases.
+3. Devices pick the new version up through the auto-updater.
+
+Packaging is configured in `electron-app/electron-builder.yml`; the `.deb`
+build helper is `scripts/build-deb.sh`.

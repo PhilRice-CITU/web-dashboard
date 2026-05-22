@@ -222,3 +222,35 @@ a:hover {
   -webkit-filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.02));
   filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.02));
 }
+
+/* rehype-highlight token theme (uses project color variables) */
+.hljs {
+  color: var(--foreground);
+  background: transparent;
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-literal {
+  color: var(--ring);
+}
+.hljs-string,
+.hljs-attr,
+.hljs-template-variable {
+  color: var(--color-logo-color);
+}
+.hljs-title,
+.hljs-section,
+.hljs-name {
+  color: var(--foreground);
+  font-weight: 600;
+}
+.hljs-number,
+.hljs-symbol {
+  color: var(--ring);
+}

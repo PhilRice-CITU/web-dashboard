@@ -1,0 +1,117 @@
+import { useState } from 'react'
+import { Link, useRouterState } from '@tanstack/react-router'
+import { ArrowLeftIcon, ChevronDownIcon, SearchIcon } from 'lucide-react'
+import { cn } from '#/shared/lib/utils'
+import { docsNav } from '../docs.config'
+import { getDoc } from '../lib/docs-registry'
+import { DocsThemeToggle } from './DocsThemeToggle'
+
+/** The current doc slug from the URL (/docs/<slug>), or '' at /docs. */
+function useCurrentSlug(): string {
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  return pathname.replace(/^\/docs\/?/, '')
+}
+
+export function DocsSidebar({ onOpenSearch }: { onOpenSearch: () => void }) {
+  const currentSlug = useCurrentSlug()
+
+  const [openSections, setOpenSections] = useState<string[]>([])
+
+  function toggleSection(label: string) {
+    setOpenSections((prev) =>
+      prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label],
+    )
+  }
+
+  return (
+    <aside className="flex flex-col gap-1 px-3 py-4">
+      {/* brand + theme toggle */}
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img src="/logo-icon.svg" alt="hum.ai" className="size-6" />
+          <div className="leading-tight">
+            <div className="text-sm font-bold text-foreground">hum.ai</div>
+            <div className="text-[10px] text-muted-foreground">
+              Rice Analytics
+            </div>
+          </div>
+        </div>
+        <DocsThemeToggle />
+      </div>
+
+      {/* back to dashboard */}
+      <a
+        href="/results"
+        className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeftIcon aria-hidden className="size-3.5" />
+        Back to Dashboard
+      </a>
+
+      {/* search trigger */}
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        aria-label="Search docs"
+        className="mb-3 flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent/60"
+      >
+        <SearchIcon aria-hidden className="size-3.5" />
+        <span>Search docs</span>
+        <kbd className="ml-auto rounded border border-border px-1 text-[10px]">
+          ⌘K
+        </kbd>
+      </button>
+
+      {/* nav groups — each expands independently */}
+      <nav aria-label="Documentation" className="flex flex-col gap-0.5">
+        {docsNav.map((section) => {
+          const open = openSections.includes(section.label)
+          return (
+            <div key={section.label}>
+              <button
+                type="button"
+                onClick={() => toggleSection(section.label)}
+                aria-expanded={open}
+                className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+              >
+                <span>{section.label}</span>
+                <ChevronDownIcon
+                  aria-hidden
+                  className={cn(
+                    'size-3 transition-transform',
+                    !open && '-rotate-90',
+                  )}
+                />
+              </button>
+              {open && (
+                <ul className="mt-0.5 flex flex-col gap-0.5 pl-3">
+                  {section.items.map((slug) => {
+                    const doc = getDoc(slug)
+                    const active = slug === currentSlug
+                    return (
+                      <li key={slug}>
+                        <Link
+                          to="/docs/$"
+                          params={{ _splat: slug }}
+                          aria-current={active ? 'page' : undefined}
+                          className={cn(
+                            'inline-block rounded-md px-2 py-1.5 text-xs transition-colors',
+                            active
+                              ? 'bg-accent font-medium text-foreground'
+                              : 'text-muted-foreground hover:text-foreground',
+                          )}
+                        >
+                          {doc?.title ?? slug}
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          )
+        })}
+      </nav>
+    </aside>
+  )
+}

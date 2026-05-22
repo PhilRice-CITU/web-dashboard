@@ -1,0 +1,25 @@
+---
+title: Test Grading
+description: Grading a sample image manually.
+---
+
+# Test Grading
+
+**Test Grading** runs the grading pipeline on an image you supply, without
+needing a physical edge device.
+
+## When to use it
+
+Use test grading to try the system, validate a change to the grading model, or
+grade a one-off sample that was not captured by a rig.
+
+## How it works
+
+Provide a rice sample image and submit it. hum.ai runs the same inference and
+grading pipeline used for device scans and returns the quality grade and
+metrics. The result is shown immediately for review.
+
+<Callout>
+  Test-grading runs use the production pipeline, so results are directly
+  comparable to scans captured by edge devices.
+</Callout>
